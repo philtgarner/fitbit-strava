@@ -1,14 +1,12 @@
-from flask import Flask, render_template, request, session
-import requests
-import json
 import base64
-import yaml
-
+import json
+import urllib.parse as urlparse
+from urllib.parse import parse_qs
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import urllib.parse as urlparse
-from urllib.parse import parse_qs
+import requests
+import yaml
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 login_url = 'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=22BCBG&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Fauth&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
@@ -71,21 +69,17 @@ def getParameter(query, param):
     except KeyError:
         return None
 
-
 @app.callback(dash.dependencies.Output('page-content', 'children'),
               [dash.dependencies.Input('url', 'pathname'), dash.dependencies.Input('url', 'search')])
 def display_page(pathname, search):
-
-
     if pathname == '/':
         return login()
     elif pathname == '/auth':
         return auth(search)
     else:
         return html.Div([
-            html.H3(f'You are on page {pathname}. Search: {search}')
+            html.H3('Unknown page')
         ])
-
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=5000)
