@@ -4,17 +4,30 @@ import json
 import base64
 import yaml
 
-app = Flask(__name__)
-app.secret_key = 'any random string'
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import urllib.parse as urlparse
+from urllib.parse import parse_qs
 
-@app.route("/")
-@app.route("/login")
-def index():
-    return render_template('login.html')
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+login_url = 'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=22BCBG&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Fauth&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
 
-@app.route("/auth")
-def auth():
-    # Get the client ID and secret from the config file
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.config.suppress_callback_exceptions = True
+app.layout = html.Div([
+    # represents the URL bar, doesn't render anything
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content')
+])
+
+def login():
+    return html.Div([
+        html.H3('Log in'),
+        html.A('Log in', href=login_url)
+    ])
+
+def auth(query):
     config = yaml.safe_load(open("config.yml"))
     client_id = config['fitbit']['client_id']
     client_secret = config['fitbit']['client_secret']
@@ -23,7 +36,7 @@ def auth():
     auth = str(base64.b64encode(bytes(f'{client_id}:{client_secret}', 'utf-8')), "utf-8")
 
     # Get the code from the permission request response
-    code = request.args.get('code')
+    code = getParameter(query, 'code')
 
     # Get an authorisation token
     endpoint = "https://api.fitbit.com/oauth2/token"
@@ -33,19 +46,46 @@ def auth():
 
     output = json.loads(requests.post(endpoint, data=data, headers=headers).text)
 
-    session['access_token'] = output['access_token']
-    session['expires_in'] = output['expires_in']
-    session['refresh_token'] = output['refresh_token']
-    session['scope'] = output['scope']
-    session['user_id'] = output['user_id']
-
+    # A successful call returns the following data:
+    # - access_token
+    # - expires_in
+    # - refresh_token
+    # - scope
+    # - user_id
     access_token = output['access_token']
 
     # Get some data
     endpoint = "https://api.fitbit.com/1/user/-/activities/heart/date/today/30d.json"
     headers = {"Authorization": f"Bearer {access_token}"}
-    return requests.get(endpoint, headers=headers).json()
+
+    return html.Div([
+        html.H3('Auth'),
+        html.Pre(requests.get(endpoint, headers=headers).text)
+    ])
+
+def getParameter(query, param):
+    url = f'http://example.org{query}'
+    parsed = urlparse.urlparse(url)
+    try:
+        return parse_qs(parsed.query)[param]
+    except KeyError:
+        return None
 
 
-if __name__ == "__main__":
-    app.run()
+@app.callback(dash.dependencies.Output('page-content', 'children'),
+              [dash.dependencies.Input('url', 'pathname'), dash.dependencies.Input('url', 'search')])
+def display_page(pathname, search):
+
+
+    if pathname == '/':
+        return login()
+    elif pathname == '/auth':
+        return auth(search)
+    else:
+        return html.Div([
+            html.H3(f'You are on page {pathname}. Search: {search}')
+        ])
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True, port=5000)
