@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 import requests
 import json
 import base64
 import yaml
 
-
 app = Flask(__name__)
+app.secret_key = 'any random string'
 
 @app.route("/")
 @app.route("/login")
@@ -22,8 +22,6 @@ def auth():
     # Encode the client ID and secret for authentication when requesting a token
     auth = str(base64.b64encode(bytes(f'{client_id}:{client_secret}', 'utf-8')), "utf-8")
 
-    print(f"Basic {auth}")
-
     # Get the code from the permission request response
     code = request.args.get('code')
 
@@ -35,12 +33,16 @@ def auth():
 
     output = json.loads(requests.post(endpoint, data=data, headers=headers).text)
 
-    print(output)
+    session['access_token'] = output['access_token']
+    session['expires_in'] = output['expires_in']
+    session['refresh_token'] = output['refresh_token']
+    session['scope'] = output['scope']
+    session['user_id'] = output['user_id']
 
     access_token = output['access_token']
 
     # Get some data
-    endpoint = "https://api.fitbit.com/1/user/-/profile.json"
+    endpoint = "https://api.fitbit.com/1/user/-/activities/heart/date/today/30d.json"
     headers = {"Authorization": f"Bearer {access_token}"}
     return requests.get(endpoint, headers=headers).json()
 
