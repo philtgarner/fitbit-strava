@@ -16,6 +16,7 @@ app.config.suppress_callback_exceptions = True
 app.layout = html.Div([
     # represents the URL bar, doesn't render anything
     dcc.Location(id='url', refresh=False),
+    html.H1("Phil Garner's fitness dashboard"),
     html.Div(id='page-content')
 ])
 
@@ -50,16 +51,46 @@ def auth(query):
     # - refresh_token
     # - scope
     # - user_id
-    access_token = output['access_token']
+    print(output)
+
+    if 'access_token' in output:
+        access_token = output['access_token']
+
+        return html.Div([
+            html.H3('Auth'),
+            getRestingHeartRateGraph(access_token)
+        ])
+    else:
+        return html.Div([
+            html.H3('Auth'),
+            html.P('An error occurred')
+        ])
+
+
+def getRestingHeartRateGraph(access_token):
 
     # Get some data
     endpoint = "https://api.fitbit.com/1/user/-/activities/heart/date/today/30d.json"
     headers = {"Authorization": f"Bearer {access_token}"}
+    hr = requests.get(endpoint, headers=headers).json()
 
-    return html.Div([
-        html.H3('Auth'),
-        html.Pre(requests.get(endpoint, headers=headers).text)
-    ])
+    dates = list(map(lambda x: x['dateTime'], hr['activities-heart']))
+    resting_hr = list(map(lambda x: x['value']['restingHeartRate'], hr['activities-heart']))
+
+    return dcc.Graph(
+        id='basic-interactions',
+        figure={
+            'data': [
+                {
+                    'x': dates,
+                    'y': resting_hr,
+                    'name': 'Resting heart rate',
+                    'mode': 'line',
+                    'marker': {'size': 12}
+                }
+            ]
+        }
+    )
 
 def getParameter(query, param):
     url = f'http://example.org{query}'
