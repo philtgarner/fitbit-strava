@@ -7,16 +7,17 @@ import dash_core_components as dcc
 import dash_html_components as html
 import requests
 import yaml
+import dash_bootstrap_components as dbc
+from datetime import datetime, timedelta
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 login_url = 'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=22BCBG&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Fauth&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.config.suppress_callback_exceptions = True
 app.layout = html.Div([
     # represents the URL bar, doesn't render anything
     dcc.Location(id='url', refresh=False),
-    html.H1("Phil Garner's fitness dashboard"),
     html.Div(id='page-content')
 ])
 
@@ -45,6 +46,8 @@ def auth(query):
 
     output = json.loads(requests.post(endpoint, data=data, headers=headers).text)
 
+
+
     # A successful call returns the following data:
     # - access_token
     # - expires_in
@@ -56,16 +59,114 @@ def auth(query):
     if 'access_token' in output:
         access_token = output['access_token']
 
-        return html.Div([
-            html.H3('Auth'),
-            getRestingHeartRateGraph(access_token)
-        ])
+        return dbc.Container(
+            [
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Resting heart rate"),
+                                getRestingHeartRateGraph(access_token)
+                            ],
+                            md=10,
+                        ),
+                        dbc.Col(
+                            [
+                                html.H3('Summary')
+                            ],
+                            md=2
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Yesterday's heart rate"),
+                                getDetailedHeartRateGraph(access_token)
+                            ],
+                            md=10
+                        ),
+                        dbc.Col(
+                            [
+                                html.H3('Summary')
+                            ],
+                            md=2
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Sleep scores"),
+                                getSleepScoresGraph(access_token)
+                            ],
+                            md=10
+                        ),
+                        dbc.Col(
+                            [
+                                html.H3('Summary')
+                            ],
+                            md=2
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Sleep history"),
+                                getSleepHistoryGraph(access_token)
+                            ],
+                            md=10
+                        ),
+                        dbc.Col(
+                            [
+                                html.H3('Summary')
+                            ],
+                            md=2
+                        )
+                    ]
+                )
+            ],
+            className="mt-4",
+        )
+
     else:
         return html.Div([
             html.H3('Auth'),
             html.P('An error occurred')
         ])
 
+def getDetailedHeartRateGraph(access_token):
+
+    yesterday = datetime.strftime(datetime.now() - timedelta(days=1), '%Y-%m-%d')
+
+    # Get some data
+    endpoint = f"https://api.fitbit.com/1/user/-/activities/heart/date/{yesterday}/1d/1min.json"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    hr = requests.get(endpoint, headers=headers).json()
+
+    print(hr)
+
+    dates = list(map(lambda x: x['time'], hr['activities-heart-intraday']['dataset']))
+    detailed_hr = list(map(lambda x: x['value'], hr['activities-heart-intraday']['dataset']))
+
+    return dcc.Graph(
+        id='detailed-hr',
+        figure={
+            'data': [
+                {
+                    'x': dates,
+                    'y': detailed_hr,
+                    'name': 'Resting heart rate',
+                    'mode': 'line',
+                    'line': {'color': 'red'}
+                }
+            ]
+        }
+    )
 
 def getRestingHeartRateGraph(access_token):
 
@@ -74,11 +175,15 @@ def getRestingHeartRateGraph(access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
     hr = requests.get(endpoint, headers=headers).json()
 
+    print(hr)
+
     dates = list(map(lambda x: x['dateTime'], hr['activities-heart']))
-    resting_hr = list(map(lambda x: x['value']['restingHeartRate'], hr['activities-heart']))
+
+    # TODO Handle things if there is no resting heart rate for the day (probably caused by not syncing yet?)
+    resting_hr = list(map(lambda x: x['value'].get('restingHeartRate', 0), hr['activities-heart']))
 
     return dcc.Graph(
-        id='basic-interactions',
+        id='resting-hr',
         figure={
             'data': [
                 {
@@ -86,9 +191,75 @@ def getRestingHeartRateGraph(access_token):
                     'y': resting_hr,
                     'name': 'Resting heart rate',
                     'mode': 'line',
-                    'marker': {'size': 12}
+                    'line': {'color': 'red'}
                 }
             ]
+        }
+    )
+
+def getSleepScoresGraph(access_token):
+
+    end = datetime.strftime(datetime.now(), '%Y-%m-%d')
+    start = datetime.strftime(datetime.now() - timedelta(days=30), '%Y-%m-%d')
+
+    # Get some data
+    endpoint = f"https://api.fitbit.com/1.2/user/-/sleep/date/{start}/{end}.json"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    hr = requests.get(endpoint, headers=headers).json()
+
+    dates = list(map(lambda x: x['dateOfSleep'], hr['sleep']))
+    resting_hr = list(map(lambda x: x['efficiency'], hr['sleep']))
+
+    return dcc.Graph(
+        id='sleep-score',
+        figure={
+            'data': [
+                {
+                    'x': dates,
+                    'y': resting_hr,
+                    'name': 'Resting heart rate',
+                    'mode': 'line',
+                    'line': {'color': 'purple'}
+                }
+            ]
+        }
+    )
+
+def getSleepHistoryGraph(access_token):
+
+    end = datetime.strftime(datetime.now(), '%Y-%m-%d')
+    start = datetime.strftime(datetime.now() - timedelta(days=3), '%Y-%m-%d')
+
+    # Get some data
+    endpoint = f"https://api.fitbit.com/1.2/user/-/sleep/date/{start}/{end}.json"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    hr = requests.get(endpoint, headers=headers).json()
+
+    dates = list(map(lambda x: x['dateOfSleep'], hr['sleep']))
+
+    print(hr['sleep'][0]['levels']['summary'])
+    # TODO Not every day has deep sleep recorded
+    deep = list(map(lambda x: x['levels']['summary']['deep']['minutes'], hr['sleep']))
+    light = list(map(lambda x: x['levels']['summary']['light']['minutes'], hr['sleep']))
+
+    return dcc.Graph(
+        id='sleep-history',
+        figure={
+            'data': [
+                {
+                    'x': ['a', 'b', 'c', 'd'],
+                    'y': deep,
+                    'name': 'Deep'
+                },
+                {
+                    'x': ['a', 'b', 'c', 'd'],
+                    'y': light,
+                    'name': 'Light'
+                }
+            ]
+        },
+        config={
+            'displayModeBar': True
         }
     )
 
@@ -108,9 +279,41 @@ def display_page(pathname, search):
     elif pathname == '/auth':
         return auth(search)
     else:
-        return html.Div([
-            html.H3('Unknown page')
-        ])
+        return dbc.Container(
+            [
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H2("Heading"),
+                                html.P(
+                                    """\
+        Donec id elit non mi porta gravida at eget metus.
+        Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum
+        nibh, ut fermentum massa justo sit amet risus. Etiam porta sem
+        malesuada magna mollis euismod. Donec sed odio dui. Donec id elit non
+        mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus
+        commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit
+        amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed
+        odio dui."""
+                                ),
+                                dbc.Button("View details", color="secondary"),
+                            ],
+                            md=4,
+                        ),
+                        dbc.Col(
+                            [
+                                html.H2("Graph"),
+                                dcc.Graph(
+                                    figure={"data": [{"x": [1, 2, 3], "y": [1, 4, 9]}]}
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ],
+            className="mt-4",
+        )
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=5000)
