@@ -172,8 +172,6 @@ def getDetailedHeartRateGraph(access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
     hr = requests.get(endpoint, headers=headers).json()
 
-    print(hr)
-
     dates = list(map(lambda x: x['time'], hr['activities-heart-intraday']['dataset']))
     detailed_hr = list(map(lambda x: x['value'], hr['activities-heart-intraday']['dataset']))
 
@@ -198,8 +196,6 @@ def getRestingHeartRateGraph(access_token):
     endpoint = "https://api.fitbit.com/1/user/-/activities/heart/date/today/30d.json"
     headers = {"Authorization": f"Bearer {access_token}"}
     hr = requests.get(endpoint, headers=headers).json()
-
-    print(hr)
 
     dates = list(map(lambda x: x['dateTime'], hr['activities-heart']))
 
@@ -259,12 +255,8 @@ def getSleepHistoryGraph(access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
     hr = requests.get(endpoint, headers=headers).json()
 
-    print(hr)
-
     dates = list(map(lambda x: x['dateOfSleep'], hr['sleep']))
 
-    print(hr['sleep'][0]['levels']['summary'])
-    # TODO Not every day has deep sleep recorded
     deep = list(map(lambda x: x['levels']['summary'].get('deep', {'minutes': 0})['minutes'], hr['sleep']))
     light = list(map(lambda x: x['levels']['summary'].get('light', {'minutes': 0})['minutes'], hr['sleep']))
     rem = list(map(lambda x: x['levels']['summary'].get('rem', {'minutes': 0})['minutes'], hr['sleep']))
@@ -274,7 +266,6 @@ def getSleepHistoryGraph(access_token):
     awake = list(map(lambda x: x['levels']['summary'].get('awake', {'minutes': 0})['minutes'], hr['sleep']))
     asleep = list(map(lambda x: x['levels']['summary'].get('asleep', {'minutes': 0})['minutes'], hr['sleep']))
     restless = list(map(lambda x: x['levels']['summary'].get('restless', {'minutes': 0})['minutes'], hr['sleep']))
-
 
     return dcc.Graph(
         id='sleep-history',
