@@ -133,3 +133,6 @@ config.yml
 
 # PyCharm directory
 .idea/
+
+# Flask session files
+flask_session
