@@ -209,7 +209,7 @@ def dashboard():
         sleep_history = get_sleep_history(fitbit_access_token)
 
         # Get Strava data
-        activities = get_strava_activities(strava_access_token)
+        activity_history = get_strava_activities(strava_access_token)
 
         return dbc.Container(
             [
@@ -270,6 +270,23 @@ def dashboard():
                             [
                                 html.H3("Sleep history"),
                                 get_sleep_history_graph(sleep_history)
+                            ],
+                            md=10
+                        ),
+                        dbc.Col(
+                            [
+                                html.H3('Summary')
+                            ],
+                            md=2
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Activities"),
+                                get_activity_history_graph(activity_history)
                             ],
                             md=10
                         ),
@@ -422,6 +439,64 @@ def get_sleep_history_graph(sleep_history):
                 'barmode': 'stack',
                 'title': '30 day sleep record',
                 'colorway': ['#154BA6', '#3F8DFF', '#7EC4FF', '#E73360', '#FF0000', '#00FF00', '#0000FF']
+            }
+        },
+    )
+
+
+def get_activity_history_graph(activity_history):
+    virtual_ride_dates = list(map(lambda x: x['start_date'], activity_history))
+    virtual_ride_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'VirtualRide' else None, activity_history))
+
+    run_dates = list(map(lambda x: x['start_date'], activity_history))
+    run_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'Run' else None, activity_history))
+
+    ride_dates = list(map(lambda x: x['start_date'], activity_history))
+    ride_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'Ride' else None, activity_history))
+
+    walk_dates = list(map(lambda x: x['start_date'], activity_history))
+    walk_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'Walk' else None, activity_history))
+
+    hike_dates = list(map(lambda x: x['start_date'], activity_history))
+    hike_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'Hike' else None, activity_history))
+
+    return dcc.Graph(
+        id='activity_history',
+        figure={
+            'data': [
+                {
+                    'x': virtual_ride_dates,
+                    'y': virtual_ride_times,
+                    'name': 'Virtual ride',
+                    'type': 'bar'
+                },
+                {
+                    'x': ride_dates,
+                    'y': ride_times,
+                    'name': 'Ride',
+                    'type': 'bar'
+                },
+                {
+                    'x': run_dates,
+                    'y': run_times,
+                    'name': 'Run',
+                    'type': 'bar'
+                },
+                {
+                    'x': walk_dates,
+                    'y': walk_times,
+                    'name': 'Walk',
+                    'type': 'bar'
+                },
+                {
+                    'x': hike_dates,
+                    'y': hike_times,
+                    'name': 'Hike',
+                    'type': 'bar'
+                }
+            ],
+            'layout': {
+                'barmode': 'stack',
             }
         },
     )
