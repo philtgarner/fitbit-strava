@@ -1,3 +1,6 @@
 fitbit:
   client_id: CLIENTID
   client_secret: CLIENTSECRET
+strava:
+  client_id: CLIENTID
+  client_secret: CLIENTSECRET

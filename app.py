@@ -12,11 +12,11 @@ from datetime import datetime, timedelta
 from flask_session import Session
 from flask import Flask, session
 
-ACCESS_TOKEN_KEY = 'access_token'
+FITBIT_ACCESS_TOKEN_KEY = 'fitbit_access_token'
+STRAVA_ACCESS_TOKEN_KEY = 'strava_access_token'
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-login_url = 'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=22BCBG&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Ffitbitauth&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.config.suppress_callback_exceptions = True
@@ -49,14 +49,14 @@ def login():
                     dbc.Col(
                         [
                             html.H4("Fitbit"),
-                            html.A('Log in', href=login_url)
+                            html.A('Log in', href=getFitbitLoginUrl())
                         ],
                         md=6,
                     ),
                     dbc.Col(
                         [
                             html.H4("Strava"),
-                            html.A('Log in', href=login_url)
+                            html.A('Log in', href=getStravaLoginUrl())
                         ],
                         md=6,
                     )
@@ -65,9 +65,20 @@ def login():
         ]
     )
 
-def getFitbitAccessToken(query):
+def getFitbitLoginUrl():
+    config = yaml.safe_load(open("config.yml"))
+    client_id = config['fitbit']['client_id']
+    return f'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Ffitbitauth&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
 
-    if session.get(ACCESS_TOKEN_KEY, None) is None:
+
+def getStravaLoginUrl():
+    config = yaml.safe_load(open("config.yml"))
+    client_id = config['strava']['client_id']
+    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=force&scope=read,read_all,activity:read,activity:read_all'
+
+
+def getFitbitAccessToken(query):
+    if session.get(FITBIT_ACCESS_TOKEN_KEY, None) is None:
         config = yaml.safe_load(open("config.yml"))
         client_id = config['fitbit']['client_id']
         client_secret = config['fitbit']['client_secret']
@@ -94,7 +105,7 @@ def getFitbitAccessToken(query):
         # - scope
         # - user_id
         if 'access_token' in output:
-            session[ACCESS_TOKEN_KEY] = output[ACCESS_TOKEN_KEY]
+            session[FITBIT_ACCESS_TOKEN_KEY] = output['access_token']
 
             # Access token saved to session for subsequent calls - success
             return True
@@ -107,35 +118,42 @@ def getFitbitAccessToken(query):
     return True
 
 def getStravaAccessToken(query):
-
-    if session.get(ACCESS_TOKEN_KEY, None) is None:
+    if session.get(STRAVA_ACCESS_TOKEN_KEY, None) is None:
         config = yaml.safe_load(open("config.yml"))
-        client_id = config['fitbit']['client_id']
-        client_secret = config['fitbit']['client_secret']
-
-        # Encode the client ID and secret for authentication when requesting a token
-        auth = str(base64.b64encode(bytes(f'{client_id}:{client_secret}', 'utf-8')), "utf-8")
+        client_id = config['strava']['client_id']
+        client_secret = config['strava']['client_secret']
 
         # Get the code from the permission request response
         code = getParameter(query, 'code')
 
         # Get an authorisation token
-        endpoint = "https://api.fitbit.com/oauth2/token"
-        data = {'clientId': client_id, 'grant_type': 'authorization_code', 'redirect_uri': 'http://127.0.0.1:5000/fitbitauth',
-                'code': code}
-        headers = {"Authorization": f"Basic {auth}",
-                   'Content-Type': 'application/x-www-form-urlencoded'}
+        endpoint = "https://www.strava.com/oauth/token"
+        data = {'client_id': client_id, 'client_secret': client_secret, 'grant_type': 'authorization_code', 'code': code}
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
         output = json.loads(requests.post(endpoint, data=data, headers=headers).text)
 
         # A successful call returns the following data:
-        # - access_token
-        # - expires_in
-        # - refresh_token
-        # - scope
-        # - user_id
+        '''{
+            "token_type": "Bearer",
+            "expires_at": 1562908002,
+            "expires_in": 21600,
+            "refresh_token": "REFRESHTOKEN",
+            "access_token": "ACCESSTOKEN",
+            "athlete": {
+                "id": 123456,
+                "username": "MeowTheCat",
+                "resource_state": 2,
+                "firstname": "Meow",
+                "lastname": "TheCat",
+                "city": "",
+                "state": "",
+                "country": null,
+                ...
+            }
+        }'''
         if 'access_token' in output:
-            session[ACCESS_TOKEN_KEY] = output[ACCESS_TOKEN_KEY]
+            session[STRAVA_ACCESS_TOKEN_KEY] = output['access_token']
 
             # Access token saved to session for subsequent calls - success
             return True
@@ -172,8 +190,12 @@ def stravaAuth(query):
 
 
 def dashboard():
-    access_token = session.get(ACCESS_TOKEN_KEY, None)
-    if access_token is not None:
+    fitbit_access_token = session.get(FITBIT_ACCESS_TOKEN_KEY, None)
+    strava_access_token = session.get(STRAVA_ACCESS_TOKEN_KEY, None)
+    if fitbit_access_token is not None and strava_access_token is not None:
+
+        activities = getStravaActivities(strava_access_token)
+
         return dbc.Container(
             [
                 dbc.Row(
@@ -181,7 +203,7 @@ def dashboard():
                         dbc.Col(
                             [
                                 html.H3("Resting heart rate"),
-                                getRestingHeartRateGraph(access_token)
+                                getRestingHeartRateGraph(fitbit_access_token)
                             ],
                             md=10,
                         ),
@@ -198,7 +220,7 @@ def dashboard():
                         dbc.Col(
                             [
                                 html.H3("Yesterday's heart rate"),
-                                getDetailedHeartRateGraph(access_token)
+                                getDetailedHeartRateGraph(fitbit_access_token)
                             ],
                             md=10
                         ),
@@ -215,7 +237,7 @@ def dashboard():
                         dbc.Col(
                             [
                                 html.H3("Sleep scores"),
-                                getSleepScoresGraph(access_token)
+                                getSleepScoresGraph(fitbit_access_token)
                             ],
                             md=10
                         ),
@@ -232,7 +254,7 @@ def dashboard():
                         dbc.Col(
                             [
                                 html.H3("Sleep history"),
-                                getSleepHistoryGraph(access_token)
+                                getSleepHistoryGraph(fitbit_access_token)
                             ],
                             md=10
                         ),
@@ -253,6 +275,12 @@ def dashboard():
             html.H3('Auth'),
             html.P('An error occurred')
         ])
+
+def getStravaActivities(access_token):
+    endpoint = "https://www.strava.com/api/v3/athlete/activities"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return requests.get(endpoint, headers=headers).json()
+
 
 def getDetailedHeartRateGraph(access_token):
 
