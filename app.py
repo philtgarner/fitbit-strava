@@ -8,13 +8,14 @@ import dash_html_components as html
 import requests
 import yaml
 import dash_bootstrap_components as dbc
-from datetime import datetime, timedelta
 from flask_session import Session
 from flask import Flask, session
 
+from fitbit import getSleepHistory, getHeartRateDetailed, getHeartRateHistory
+from strava import getStravaActivities
+
 FITBIT_ACCESS_TOKEN_KEY = 'fitbit_access_token'
 STRAVA_ACCESS_TOKEN_KEY = 'strava_access_token'
-
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -70,12 +71,10 @@ def getFitbitLoginUrl():
     client_id = config['fitbit']['client_id']
     return f'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Ffitbitauth&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
 
-
 def getStravaLoginUrl():
     config = yaml.safe_load(open("config.yml"))
     client_id = config['strava']['client_id']
     return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=force&scope=read,read_all,activity:read,activity:read_all'
-
 
 def getFitbitAccessToken(query):
     if session.get(FITBIT_ACCESS_TOKEN_KEY, None) is None:
@@ -170,7 +169,8 @@ def fitbitAuth(query):
     if getFitbitAccessToken(query):
         return html.Div([
             html.H3('Fitbit authenticated'),
-            dcc.Link('Dashboard', href='/dashboard')
+            dcc.Link('Dashboard', href='/dashboard'),
+            dcc.Link('Home', href='/')
         ])
     return html.Div([
         html.H3('Fitbit authentication error'),
@@ -181,7 +181,8 @@ def stravaAuth(query):
     if getStravaAccessToken(query):
         return html.Div([
             html.H3('Strava authenticated'),
-            dcc.Link('Dashboard', href='/dashboard')
+            dcc.Link('Dashboard', href='/dashboard'),
+            dcc.Link('Home', href='/')
         ])
     return html.Div([
         html.H3('Strava authentication error'),
@@ -194,6 +195,12 @@ def dashboard():
     strava_access_token = session.get(STRAVA_ACCESS_TOKEN_KEY, None)
     if fitbit_access_token is not None and strava_access_token is not None:
 
+        # Get Fitbit data
+        heart_rate_history = getHeartRateHistory(fitbit_access_token)
+        heart_rate_details = getHeartRateDetailed(fitbit_access_token)
+        sleep_history = getSleepHistory(fitbit_access_token)
+
+        # Get Strava data
         activities = getStravaActivities(strava_access_token)
 
         return dbc.Container(
@@ -203,7 +210,7 @@ def dashboard():
                         dbc.Col(
                             [
                                 html.H3("Resting heart rate"),
-                                getRestingHeartRateGraph(fitbit_access_token)
+                                getRestingHeartRateGraph(heart_rate_history)
                             ],
                             md=10,
                         ),
@@ -220,7 +227,7 @@ def dashboard():
                         dbc.Col(
                             [
                                 html.H3("Yesterday's heart rate"),
-                                getDetailedHeartRateGraph(fitbit_access_token)
+                                getDetailedHeartRateGraph(heart_rate_details)
                             ],
                             md=10
                         ),
@@ -236,8 +243,8 @@ def dashboard():
                     [
                         dbc.Col(
                             [
-                                html.H3("Sleep scores"),
-                                getSleepScoresGraph(fitbit_access_token)
+                                html.H3("Sleep efficiency"),
+                                getSleepScoresGraph(sleep_history)
                             ],
                             md=10
                         ),
@@ -254,7 +261,7 @@ def dashboard():
                         dbc.Col(
                             [
                                 html.H3("Sleep history"),
-                                getSleepHistoryGraph(fitbit_access_token)
+                                getSleepHistoryGraph(sleep_history)
                             ],
                             md=10
                         ),
@@ -276,23 +283,11 @@ def dashboard():
             html.P('An error occurred')
         ])
 
-def getStravaActivities(access_token):
-    endpoint = "https://www.strava.com/api/v3/athlete/activities"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    return requests.get(endpoint, headers=headers).json()
 
+def getDetailedHeartRateGraph(heart_rate_details):
 
-def getDetailedHeartRateGraph(access_token):
-
-    yesterday = datetime.strftime(datetime.now() - timedelta(days=1), '%Y-%m-%d')
-
-    # Get some data
-    endpoint = f"https://api.fitbit.com/1/user/-/activities/heart/date/{yesterday}/1d/1min.json"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    hr = requests.get(endpoint, headers=headers).json()
-
-    dates = list(map(lambda x: x['time'], hr['activities-heart-intraday']['dataset']))
-    detailed_hr = list(map(lambda x: x['value'], hr['activities-heart-intraday']['dataset']))
+    dates = list(map(lambda x: x['time'], heart_rate_details['activities-heart-intraday']['dataset']))
+    detailed_hr = list(map(lambda x: x['value'], heart_rate_details['activities-heart-intraday']['dataset']))
 
     return dcc.Graph(
         id='detailed-hr',
@@ -309,17 +304,12 @@ def getDetailedHeartRateGraph(access_token):
         }
     )
 
-def getRestingHeartRateGraph(access_token):
+def getRestingHeartRateGraph(heart_rate_history):
 
-    # Get some data
-    endpoint = "https://api.fitbit.com/1/user/-/activities/heart/date/today/30d.json"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    hr = requests.get(endpoint, headers=headers).json()
-
-    dates = list(map(lambda x: x['dateTime'], hr['activities-heart']))
+    dates = list(map(lambda x: x['dateTime'], heart_rate_history['activities-heart']))
 
     # TODO Handle things if there is no resting heart rate for the day (probably caused by not syncing yet?)
-    resting_hr = list(map(lambda x: x['value'].get('restingHeartRate', None), hr['activities-heart']))
+    resting_hr = list(map(lambda x: x['value'].get('restingHeartRate', None), heart_rate_history['activities-heart']))
 
     return dcc.Graph(
         id='resting-hr',
@@ -336,18 +326,9 @@ def getRestingHeartRateGraph(access_token):
         }
     )
 
-def getSleepScoresGraph(access_token):
-
-    end = datetime.strftime(datetime.now(), '%Y-%m-%d')
-    start = datetime.strftime(datetime.now() - timedelta(days=30), '%Y-%m-%d')
-
-    # Get some data
-    endpoint = f"https://api.fitbit.com/1.2/user/-/sleep/date/{start}/{end}.json"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    hr = requests.get(endpoint, headers=headers).json()
-
-    dates = list(map(lambda x: x['dateOfSleep'], hr['sleep']))
-    resting_hr = list(map(lambda x: x['efficiency'], hr['sleep']))
+def getSleepScoresGraph(sleep_history):
+    dates = list(map(lambda x: x['dateOfSleep'], sleep_history['sleep']))
+    resting_hr = list(map(lambda x: x['efficiency'], sleep_history['sleep']))
 
     return dcc.Graph(
         id='sleep-score',
@@ -364,27 +345,19 @@ def getSleepScoresGraph(access_token):
         }
     )
 
-def getSleepHistoryGraph(access_token):
+def getSleepHistoryGraph(sleep_history):
 
-    end = datetime.strftime(datetime.now(), '%Y-%m-%d')
-    start = datetime.strftime(datetime.now() - timedelta(days=30), '%Y-%m-%d')
+    dates = list(map(lambda x: x['dateOfSleep'], sleep_history['sleep']))
 
-    # Get some data
-    endpoint = f"https://api.fitbit.com/1.2/user/-/sleep/date/{start}/{end}.json"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    hr = requests.get(endpoint, headers=headers).json()
-
-    dates = list(map(lambda x: x['dateOfSleep'], hr['sleep']))
-
-    deep = list(map(lambda x: x['levels']['summary'].get('deep', {'minutes': None})['minutes'], hr['sleep']))
-    light = list(map(lambda x: x['levels']['summary'].get('light', {'minutes': None})['minutes'], hr['sleep']))
-    rem = list(map(lambda x: x['levels']['summary'].get('rem', {'minutes': None})['minutes'], hr['sleep']))
-    wake = list(map(lambda x: x['levels']['summary'].get('wake', {'minutes': None})['minutes'], hr['sleep']))
+    deep = list(map(lambda x: x['levels']['summary'].get('deep', {'minutes': None})['minutes'], sleep_history['sleep']))
+    light = list(map(lambda x: x['levels']['summary'].get('light', {'minutes': None})['minutes'], sleep_history['sleep']))
+    rem = list(map(lambda x: x['levels']['summary'].get('rem', {'minutes': None})['minutes'], sleep_history['sleep']))
+    wake = list(map(lambda x: x['levels']['summary'].get('wake', {'minutes': None})['minutes'], sleep_history['sleep']))
 
     # Data from sleeps not long enough to be tracked with sleep stages
-    awake = list(map(lambda x: x['levels']['summary'].get('awake', {'minutes': None})['minutes'], hr['sleep']))
-    asleep = list(map(lambda x: x['levels']['summary'].get('asleep', {'minutes': None})['minutes'], hr['sleep']))
-    restless = list(map(lambda x: x['levels']['summary'].get('restless', {'minutes': None})['minutes'], hr['sleep']))
+    awake = list(map(lambda x: x['levels']['summary'].get('awake', {'minutes': None})['minutes'], sleep_history['sleep']))
+    asleep = list(map(lambda x: x['levels']['summary'].get('asleep', {'minutes': None})['minutes'], sleep_history['sleep']))
+    restless = list(map(lambda x: x['levels']['summary'].get('restless', {'minutes': None})['minutes'], sleep_history['sleep']))
 
     return dcc.Graph(
         id='sleep-history',
