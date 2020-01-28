@@ -10,12 +10,15 @@ import yaml
 import dash_bootstrap_components as dbc
 from flask_session import Session
 from flask import Flask, session
+from datetime import datetime, timedelta
 
 from fitbit import get_sleep_history, get_heart_rate_detailed, get_heart_rate_history
-from strava import get_strava_activities
+from strava import get_strava_activities, get_strava_activity_stream
 
 FITBIT_ACCESS_TOKEN_KEY = 'fitbit_access_token'
 STRAVA_ACCESS_TOKEN_KEY = 'strava_access_token'
+
+DATE_FORMAT = '%b %d %Y %H:%M'
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -77,7 +80,7 @@ def get_fitbit_login_url():
 def get_strava_login_url():
     config = yaml.safe_load(open("config.yml"))
     client_id = config['strava']['client_id']
-    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=force&scope=read,read_all,activity:read,activity:read_all'
+    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=auto&scope=read,read_all,activity:read,activity:read_all'
 
 
 def get_fitbit_access_token(query):
@@ -297,6 +300,17 @@ def dashboard():
                             md=2
                         )
                     ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Cycling activities"),
+                                get_cycling_activity_history_table(activity_history)
+                            ],
+                            md=12
+                        )
+                    ]
                 )
             ],
             className="mt-4",
@@ -502,6 +516,129 @@ def get_activity_history_graph(activity_history):
     )
 
 
+def get_cycling_activity_history_table(activity_history):
+
+    rows = list(map(cycling_activity_to_tr, filter(lambda a: a['type'] == 'VirtualRide' or a['type'] == 'Ride', activity_history)))
+
+    return html.Table(
+        [
+            html.Thead(
+                html.Tr(
+                    [
+                        html.Th('Activity name'),
+                        html.Th('Start time'),
+                        html.Th('Ride time'),
+                        html.Th('Average power'),
+                        html.Th('Average weighted power'),
+                        html.Th('Max power'),
+                        html.Th('Average heart rate'),
+                        html.Th('Max heart rate'),
+                        html.Th('Suffer score'),
+                    ]
+                )
+            ),
+            html.Tbody(
+                rows
+            )
+        ]
+    )
+
+
+def cycling_activity_to_tr(cycling_activity):
+    # Name
+    # Start time
+    # Ride time
+    # Average power
+    # Average weighted power
+    # Max power
+    # Average HR
+    # Max HR
+    # Suffer score
+    id = cycling_activity['id']
+    return html.Tr(
+        [
+            html.Td(dcc.Link(cycling_activity['name'], href=f'/cycling?activity={id}')),
+            html.Td(datetime.strptime(cycling_activity['start_date_local'], '%Y-%m-%dT%H:%M:%SZ').strftime(DATE_FORMAT)),
+            html.Td(str(timedelta(seconds=cycling_activity['moving_time']))),
+            html.Td(cycling_activity['average_watts']),
+            html.Td(cycling_activity['weighted_average_watts']),
+            html.Td(cycling_activity['max_watts']),
+            html.Td(cycling_activity['average_heartrate']),
+            html.Td(cycling_activity['max_heartrate']),
+            html.Td(cycling_activity['suffer_score'])
+        ]
+    )
+
+def get_cycling_activity_graph(cycling_activity_stream):
+    time = list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))[0]['data']
+    power = list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))[0]['data']
+    hr = list(filter(lambda f: f['type'] == 'heartrate', cycling_activity_stream))[0]['data']
+
+    return dcc.Graph(
+        id='cycling-power-hr',
+        figure={
+            'data': [
+                {
+                    'x': time,
+                    'y': power,
+                    'name': 'Power',
+                    'mode': 'line',
+                    'line': {'color': 'blue'}
+                },
+                {
+                    'x': time,
+                    'y': hr,
+                    'name': 'Heart rate',
+                    'mode': 'line',
+                    'line': {'color': 'red'},
+                    'yaxis': 'y2'
+                }
+            ],
+            'layout': {
+                'yaxis':{
+                    'title': 'Power'
+                },
+                'yaxis2':{
+                    'title':'Heart rate',
+                    'overlaying':'y',
+                    'side':'right'
+                }
+            }
+        }
+    )
+
+def cycling(query):
+    fitbit_access_token = session.get(FITBIT_ACCESS_TOKEN_KEY, None)
+    strava_access_token = session.get(STRAVA_ACCESS_TOKEN_KEY, None)
+    activity_id = get_parameter(query, 'activity')[0]
+    if fitbit_access_token is not None and strava_access_token is not None and activity_id is not None:
+
+        cycling_activity_stream = get_strava_activity_stream(strava_access_token, activity_id)
+
+        return dbc.Container(
+            [
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Power vs HR"),
+                                get_cycling_activity_graph(cycling_activity_stream)
+                            ],
+                            md=12,
+                        )
+                    ]
+                ),
+            ],
+            className="mt-4",
+        )
+
+    else:
+        return html.Div([
+            html.H3('Auth'),
+            html.P('An error occurred')
+        ])
+
+
 def get_parameter(query, param):
     url = f'http://example.org{query}'
     parsed = urlparse.urlparse(url)
@@ -522,6 +659,8 @@ def display_page(pathname, search):
         return strava_auth(search)
     elif pathname == '/dashboard':
         return dashboard()
+    elif pathname == '/cycling':
+        return cycling(search)
     else:
         return html.H1('404')
 
