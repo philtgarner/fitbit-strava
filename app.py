@@ -570,7 +570,7 @@ def cycling_activity_to_tr(cycling_activity):
     )
 
 def get_cycling_activity_graph(cycling_activity_stream):
-    time = list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))[0]['data']
+    time = list(map(lambda t: t/60, list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))[0]['data']))
     power = list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))[0]['data']
     hr = list(filter(lambda f: f['type'] == 'heartrate', cycling_activity_stream))[0]['data']
 
