@@ -13,7 +13,7 @@ from flask import Flask, session
 from datetime import datetime, timedelta
 
 from fitbit import get_sleep_history, get_heart_rate_detailed, get_heart_rate_history, get_weight
-from strava import get_strava_activities, get_strava_activity_stream, get_cycling_activity_power_stats
+from strava import get_strava_activities, get_strava_activity, get_strava_activity_stream, get_cycling_activity_power_stats
 
 FITBIT_ACCESS_TOKEN_KEY = 'fitbit_access_token'
 STRAVA_ACCESS_TOKEN_KEY = 'strava_access_token'
@@ -607,24 +607,15 @@ def get_cycling_activity_graph(cycling_activity_stream):
         }
     )
 
-def get_cycling_average_power_table(power_averages):
-    '''
-    'twenty_minute': df.power.rolling(window=twenty_minute_row_count).mean().max(),
-    'ten_minute': df.power.rolling(window=ten_minute_row_count).mean().max(),
-    'five_minute': df.power.rolling(window=five_minute_row_count).mean().max(),
-    'one_minute': df.power.rolling(window=one_minute_row_count).mean().max(),
-    'thirty_second': df.power.rolling(window=thirty_second_row_count).mean().max(),
-    'five_second': df.power.rolling(window=five_second_row_count).mean().max(),
-    'one_second': df.power.rolling(window=one_second_row_count).mean().max(),
-    '''
-
+def get_cycling_average_power_table(power_averages, body_composition):
     return html.Table(
         [
             html.Thead(
                 html.Tr(
                     [
                         html.Th('Duration'),
-                        html.Th('Power')
+                        html.Th('Power (Watts)'),
+                        html.Th('Power:weight (Watts/kg)')
                     ]
                 )
             ),
@@ -633,50 +624,157 @@ def get_cycling_average_power_table(power_averages):
                     html.Tr(
                         [
                             html.Td('Twenty minutes'),
-                            html.Td(power_averages['twenty_minute'])
+                            html.Td(round(power_averages['twenty_minute'], 1)),
+                            html.Td(round(power_averages['twenty_minute'] / body_composition['weight'], 2) if body_composition['weight'] is not None else '??')
                         ]
                     ),
                     html.Tr(
                         [
                             html.Td('Ten minutes'),
-                            html.Td(power_averages['ten_minute'])
+                            html.Td(round(power_averages['ten_minute'], 1)),
+                            html.Td(round(power_averages['ten_minute'] / body_composition['weight'], 2) if body_composition['weight'] is not None else '??')
                         ]
                     ),
                     html.Tr(
                         [
                             html.Td('Five minutes'),
-                            html.Td(power_averages['five_minute'])
+                            html.Td(round(power_averages['five_minute'], 1)),
+                            html.Td(round(power_averages['five_minute'] / body_composition['weight'], 2) if body_composition['weight'] is not None else '??')
                         ]
                     ),
                     html.Tr(
                         [
                             html.Td('One minute'),
-                            html.Td(power_averages['one_minute'])
+                            html.Td(round(power_averages['one_minute'], 1)),
+                            html.Td(round(power_averages['one_minute'] / body_composition['weight'], 2) if body_composition['weight'] is not None else '??')
                         ]
                     ),
                     html.Tr(
                         [
                             html.Td('Thirty seconds'),
-                            html.Td(power_averages['thirty_second'])
+                            html.Td(round(power_averages['thirty_second'], 1)),
+                            html.Td(round(power_averages['thirty_second'] / body_composition['weight'], 2) if body_composition['weight'] is not None else '??')
                         ]
                     ),
                     html.Tr(
                         [
                             html.Td('Five seconds'),
-                            html.Td(power_averages['five_second'])
+                            html.Td(round(power_averages['five_second'], 1)),
+                            html.Td(round(power_averages['five_second'] / body_composition['weight'], 2) if body_composition['weight'] is not None else '??')
                         ]
                     ),
                     html.Tr(
                         [
                             html.Td('One second'),
-                            html.Td(power_averages['one_second'])
+                            html.Td(round(power_averages['one_second'], 1)),
+                            html.Td(round(power_averages['one_second'] / body_composition['weight'], 2) if body_composition['weight'] is not None else '??')
                         ]
                     )
 
                 ]
             )
-        ]
+        ],
+        className='table table-hover'
     )
+
+
+def get_cycling_summary_table(cycling_activity):
+    '''
+
+    name
+    description
+    [photos][primary][urls][600]
+    '''
+    return html.Table(
+        [
+            html.Tr(
+                [
+                    html.Th('Distance'),
+                    html.Td(cycling_activity['distance'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Time (moving)'),
+                    html.Td(cycling_activity['moving_time'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Time (elapsed)'),
+                    html.Td(cycling_activity['elapsed_time'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Speed (average)'),
+                    html.Td(cycling_activity['average_speed'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Speed (max)'),
+                    html.Td(cycling_activity['max_speed'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Power (average)'),
+                    html.Td(cycling_activity['average_watts'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Power (weighted average)'),
+                    html.Td(cycling_activity['weighted_average_watts'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Power (max)'),
+                    html.Td(cycling_activity['max_watts'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Heartrate (average)'),
+                    html.Td(cycling_activity['average_heartrate'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Heartrate (max)'),
+                    html.Td(cycling_activity['max_heartrate'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Elevation gain'),
+                    html.Td(cycling_activity['total_elevation_gain'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Cadence (average)'),
+                    html.Td(cycling_activity['average_cadence'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Calories'),
+                    html.Td(cycling_activity['calories'])
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Suffer score'),
+                    html.Td(cycling_activity['suffer_score'])
+                ]
+            ),
+        ],
+        className='table table-hover'
+    )
+
 
 def cycling(query):
     fitbit_access_token = session.get(FITBIT_ACCESS_TOKEN_KEY, None)
@@ -684,13 +782,43 @@ def cycling(query):
     activity_id = get_parameter(query, 'activity')[0]
     if fitbit_access_token is not None and strava_access_token is not None and activity_id is not None:
 
+        cycling_activity = get_strava_activity(strava_access_token, activity_id)
         cycling_activity_stream = get_strava_activity_stream(strava_access_token, activity_id)
         power_averages = get_cycling_activity_power_stats(cycling_activity_stream)
 
-        body_composition = get_weight(fitbit_access_token, datetime.strptime('2020-01-15', '%Y-%m-%d'))
+        body_composition = get_weight(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], '%Y-%m-%dT%H:%M:%SZ'))
 
         return dbc.Container(
             [
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H1(cycling_activity['name']),
+                                html.H2(cycling_activity['description']),
+                                html.H2(datetime.strptime(cycling_activity['start_date_local'], '%Y-%m-%dT%H:%M:%SZ').strftime(DATE_FORMAT)),
+                            ],
+                            md=8,
+                        ),
+                        dbc.Col(
+                            [
+                                html.Img(src=cycling_activity['photos']['primary']['urls']['600'], style={'max-width': '100%'})
+                            ],
+                            md=4,
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Summary"),
+                                get_cycling_summary_table(cycling_activity)
+                            ],
+                            md=12,
+                        )
+                    ]
+                ),
                 dbc.Row(
                     [
                         dbc.Col(
@@ -707,7 +835,7 @@ def cycling(query):
                         dbc.Col(
                             [
                                 html.H3("Maximum power"),
-                                get_cycling_average_power_table(power_averages)
+                                get_cycling_average_power_table(power_averages, body_composition)
                             ],
                             md=12,
                         )
