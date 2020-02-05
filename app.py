@@ -12,7 +12,7 @@ from flask_session import Session
 from flask import Flask, session
 from datetime import datetime, timedelta
 
-from fitbit import get_sleep_history, get_heart_rate_detailed, get_heart_rate_history
+from fitbit import get_sleep_history, get_heart_rate_detailed, get_heart_rate_history, get_weight
 from strava import get_strava_activities, get_strava_activity_stream, get_cycling_activity_power_stats
 
 FITBIT_ACCESS_TOKEN_KEY = 'fitbit_access_token'
@@ -686,6 +686,8 @@ def cycling(query):
 
         cycling_activity_stream = get_strava_activity_stream(strava_access_token, activity_id)
         power_averages = get_cycling_activity_power_stats(cycling_activity_stream)
+
+        body_composition = get_weight(fitbit_access_token, datetime.strptime('2020-01-15', '%Y-%m-%d'))
 
         return dbc.Container(
             [
