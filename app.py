@@ -20,18 +20,36 @@ STRAVA_ACCESS_TOKEN_KEY = 'strava_access_token'
 
 DATE_FORMAT = '%b %d %Y %H:%M'
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+# See here for themes
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 app.config.suppress_callback_exceptions = True
 
 app.server.config["SESSION_PERMANENT"] = False
 app.server.config["SESSION_TYPE"] = "filesystem"
 Session(app.server)
 
+navbar = dbc.NavbarSimple(
+    children=[
+        dbc.NavItem(dbc.NavLink("Dashboard", href="/dashboard")),
+        dbc.DropdownMenu(
+            nav=True,
+            in_navbar=True,
+            label="Menu",
+            children=[
+                dbc.DropdownMenuItem(dbc.NavLink('Strava sign in', href='/strava')),
+                dbc.DropdownMenuItem(dbc.NavLink('Fitbit sign in', href='/fitbit')),
+            ],
+        ),
+    ],
+    brand="Phil Garner fitness dashboard",
+    brand_href="#",
+    sticky="top",
+)
+
 app.layout = html.Div([
     # represents the URL bar, doesn't render anything
     dcc.Location(id='url', refresh=False),
+    navbar,
     html.Div(id='page-content')
 ])
 
@@ -540,7 +558,8 @@ def get_cycling_activity_history_table(activity_history):
             html.Tbody(
                 rows
             )
-        ]
+        ],
+        className='table table-hover'
     )
 
 
