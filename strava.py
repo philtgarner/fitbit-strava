@@ -14,6 +14,12 @@ def get_strava_activity_stream(access_token: str, activity_id: str):
     return requests.get(endpoint, headers=headers).json()
 
 
+def get_strava_activity(access_token: str, activity_id: str):
+    endpoint = f'https://www.strava.com/api/v3/activities/{activity_id}'
+    headers = {'Authorization': f'Bearer {access_token}'}
+    return requests.get(endpoint, headers=headers).json()
+
+
 def get_cycling_activity_power_stats(cycling_activity_stream):
     data = {
         'time': list(map(lambda t: t / 60, list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))[0]['data'])),
