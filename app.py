@@ -795,6 +795,28 @@ def get_cycling_summary_table(cycling_activity):
     )
 
 
+
+
+def get_body_composition_table(body_composition):
+    return html.Table(
+        [
+            html.Tr(
+                [
+                    html.Th('Weight (kg)'),
+                    html.Td(round(body_composition['weight'], 1))
+                ]
+            ),
+            html.Tr(
+                [
+                    html.Th('Fat (%)'),
+                    html.Td(round(body_composition['fat'], 2))
+                ]
+            ),
+        ],
+        className='table table-hover'
+    )
+
+
 def cycling(query):
     fitbit_access_token = session.get(FITBIT_ACCESS_TOKEN_KEY, None)
     strava_access_token = session.get(STRAVA_ACCESS_TOKEN_KEY, None)
@@ -834,7 +856,14 @@ def cycling(query):
                                 html.H3("Summary"),
                                 get_cycling_summary_table(cycling_activity)
                             ],
-                            md=12,
+                            md=6,
+                        ),
+                        dbc.Col(
+                            [
+                                html.H3("Body composition"),
+                                get_body_composition_table(body_composition)
+                            ],
+                            md=6,
                         )
                     ]
                 ),
