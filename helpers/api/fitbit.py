@@ -10,14 +10,14 @@ def get_heart_rate_history(access_token: str, days: int = 30):
     return requests.get(endpoint, headers=headers).json()
 
 
-def get_heart_rate_detailed(access_token: str, day: datetime = None):
+def get_heart_rate_detailed(access_token: str, day: datetime = None, detail: str = '1min'):
     if day is None:
         day = datetime.now() - timedelta(days=1)
 
     yesterday = datetime.strftime(day, '%Y-%m-%d')
 
     # Get some data
-    endpoint = f'https://api.fitbit.com/1/user/-/activities/heart/date/{yesterday}/1d/1min.json'
+    endpoint = f'https://api.fitbit.com/1/user/-/activities/heart/date/{yesterday}/1d/{detail}.json'
     headers = {"Authorization": f"Bearer {access_token}"}
     return requests.get(endpoint, headers=headers).json()
 

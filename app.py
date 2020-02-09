@@ -354,7 +354,7 @@ def cycling(query):
         power_averages = api_strava.get_cycling_activity_power_stats(cycling_activity_stream)
 
         body_composition = api_fitbit.get_weight(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT))
-        day_heartrate = api_fitbit.get_heart_rate_detailed(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT))
+        day_heartrate = api_fitbit.get_heart_rate_detailed(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT), '1sec')
 
         return dbc.Container(
             [
