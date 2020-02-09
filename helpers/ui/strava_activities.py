@@ -5,20 +5,20 @@ from datetime import datetime, timedelta
 
 
 def get_activity_history_graph(activity_history):
-    virtual_ride_dates = list(map(lambda x: x['start_date'], activity_history))
-    virtual_ride_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'VirtualRide' else None, activity_history))
+    virtual_ride_dates = list(map(lambda x: x[STRAVA_API_KEY_ACTIVITY_START_LOCAL], activity_history))
+    virtual_ride_times = list(map(lambda x: x[STRAVA_API_KEY_ELAPSED_TIME]/60 if x[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_ACTIVITY_VIRTUAL_RIDE else None, activity_history))
 
-    run_dates = list(map(lambda x: x['start_date'], activity_history))
-    run_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'Run' else None, activity_history))
+    run_dates = list(map(lambda x: x[STRAVA_API_KEY_ACTIVITY_START_LOCAL], activity_history))
+    run_times = list(map(lambda x: x[STRAVA_API_KEY_ELAPSED_TIME]/60 if x[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_ACTIVITY_RUN else None, activity_history))
 
-    ride_dates = list(map(lambda x: x['start_date'], activity_history))
-    ride_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'Ride' else None, activity_history))
+    ride_dates = list(map(lambda x: x[STRAVA_API_KEY_ACTIVITY_START_LOCAL], activity_history))
+    ride_times = list(map(lambda x: x[STRAVA_API_KEY_ELAPSED_TIME]/60 if x[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_ACTIVITY_RIDE else None, activity_history))
 
-    walk_dates = list(map(lambda x: x['start_date'], activity_history))
-    walk_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'Walk' else None, activity_history))
+    walk_dates = list(map(lambda x: x[STRAVA_API_KEY_ACTIVITY_START_LOCAL], activity_history))
+    walk_times = list(map(lambda x: x[STRAVA_API_KEY_ELAPSED_TIME]/60 if x[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_ACTIVITY_WALK else None, activity_history))
 
-    hike_dates = list(map(lambda x: x['start_date'], activity_history))
-    hike_times = list(map(lambda x: x['elapsed_time']/60 if x['type'] == 'Hike' else None, activity_history))
+    hike_dates = list(map(lambda x: x[STRAVA_API_KEY_ACTIVITY_START_LOCAL], activity_history))
+    hike_times = list(map(lambda x: x[STRAVA_API_KEY_ELAPSED_TIME]/60 if x[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_ACTIVITY_HIKE else None, activity_history))
 
     return dcc.Graph(
         id='activity_history',
@@ -64,22 +64,22 @@ def get_activity_history_graph(activity_history):
 
 def get_cycling_activity_history_table(activity_history):
 
-    rows = list(map(cycling_activity_to_tr, filter(lambda a: a['type'] == 'VirtualRide' or a['type'] == 'Ride', activity_history)))
+    rows = list(map(cycling_activity_to_tr, filter(lambda a: a[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_ACTIVITY_VIRTUAL_RIDE or a[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_ACTIVITY_RIDE, activity_history)))
 
     return html.Table(
         [
             html.Thead(
                 html.Tr(
                     [
-                        html.Th('Activity name'),
-                        html.Th('Start time'),
-                        html.Th('Ride time'),
-                        html.Th('Average power'),
-                        html.Th('Average weighted power'),
-                        html.Th('Max power'),
-                        html.Th('Average heart rate'),
-                        html.Th('Max heart rate'),
-                        html.Th('Suffer score'),
+                        html.Th(TITLE_ACTIVITY_NAME),
+                        html.Th(TITLE_START_TIME),
+                        html.Th(TITLE_RIDE_TIME),
+                        html.Th(TITLE_AVERAGE_POWER),
+                        html.Th(TITLE_AVERAGE_WEIGHTED_POWER),
+                        html.Th(TITLE_MAX_POWER),
+                        html.Th(TITLE_AVERAGE_HEARTRATE),
+                        html.Th(TITLE_MAX_HEARTRATE),
+                        html.Th(TITLE_SUFFER_SCORE),
                     ]
                 )
             ),
@@ -92,41 +92,35 @@ def get_cycling_activity_history_table(activity_history):
 
 
 def cycling_activity_to_tr(cycling_activity):
-    # Name
-    # Start time
-    # Ride time
-    # Average power
-    # Average weighted power
-    # Max power
-    # Average HR
-    # Max HR
-    # Suffer score
-    id = cycling_activity['id']
+    id = cycling_activity[STRAVA_API_KEY_ACTIVITY_ID]
     return html.Tr(
         [
-            html.Td(dcc.Link(cycling_activity['name'], href=f'{URL_CYCLING}?activity={id}')),
-            html.Td(datetime.strptime(cycling_activity['start_date_local'], '%Y-%m-%dT%H:%M:%SZ').strftime(DISPLAY_DATE_FORMAT)),
-            html.Td(str(timedelta(seconds=cycling_activity['moving_time']))),
-            html.Td(cycling_activity['average_watts']),
-            html.Td(cycling_activity['weighted_average_watts']),
-            html.Td(cycling_activity['max_watts']),
-            html.Td(cycling_activity['average_heartrate']),
-            html.Td(cycling_activity['max_heartrate']),
-            html.Td(cycling_activity['suffer_score'])
+            html.Td(dcc.Link(cycling_activity[STRAVA_API_KEY_ACTIVITY_NAME], href=f'{URL_CYCLING}?activity={id}')),
+            html.Td(datetime.strptime(cycling_activity[STRAVA_API_KEY_ACTIVITY_START_LOCAL], UTC_DATE_FORMAT).strftime(DISPLAY_DATE_FORMAT)),
+            html.Td(str(timedelta(seconds=cycling_activity[STRAVA_API_KEY_MOVING_TIME]))),
+            html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_POWER]),
+            html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_WEIGHTED_POWER]),
+            html.Td(cycling_activity[STRAVA_API_KEY_MAX_POWER]),
+            html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_HEARTRATE]),
+            html.Td(cycling_activity[STRAVA_API_KEY_MAX_HEARTRATE]),
+            html.Td(cycling_activity[STRAVA_API_KEY_SUFFER_SCORE])
         ]
     )
 
 
 def get_cycling_activity_graph(cycling_activity_stream):
 
-    time = list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))
-    power = list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))
-    hr = list(filter(lambda f: f['type'] == 'heartrate', cycling_activity_stream))
-    empty = [None] * len(time[0]['data'])
+    time = list(filter(lambda f: f[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_API_KEY_DATA_STREAM_TIME, cycling_activity_stream))
+    power = list(filter(lambda f: f[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_API_KEY_DATA_STREAM_POWER, cycling_activity_stream))
+    hr = list(filter(lambda f: f[STRAVA_API_KEY_DATA_STREAM_TYPE] == STRAVA_API_KEY_DATA_STREAM_HEARTRATE, cycling_activity_stream))
 
-    time = list(map(lambda t: t / 60, time[0]['data']))
-    power = power[0]['data'] if len(power) > 0 else empty
-    hr = hr[0]['data'] if len(hr) > 0 else empty
+    # Create an empty array of the right same length (we assume we always get time)
+    # This will be used if we're missing power and/or HR data
+    empty = [None] * len(time[0][STRAVA_API_KEY_DATA_STREAM_DATA])
+
+    time = list(map(lambda t: t / 60, time[0][STRAVA_API_KEY_DATA_STREAM_DATA]))
+    power = power[0][STRAVA_API_KEY_DATA_STREAM_DATA] if len(power) > 0 else empty
+    hr = hr[0][STRAVA_API_KEY_DATA_STREAM_DATA] if len(hr) > 0 else empty
 
     return dcc.Graph(
         id='cycling-power-hr',
@@ -137,14 +131,14 @@ def get_cycling_activity_graph(cycling_activity_stream):
                     'y': power,
                     'name': 'Power',
                     'mode': 'line',
-                    'line': {'color': 'blue'}
+                    'line': {'color': COLOUR_BLUE}
                 },
                 {
                     'x': time,
                     'y': hr,
                     'name': 'Heart rate',
                     'mode': 'line',
-                    'line': {'color': 'red'},
+                    'line': {'color': COLOUR_RED},
                     'yaxis': 'y2'
                 }
             ],
@@ -153,106 +147,100 @@ def get_cycling_activity_graph(cycling_activity_stream):
                     'title': 'Power'
                 },
                 'yaxis2':{
-                    'title':'Heart rate',
-                    'overlaying':'y',
-                    'side':'right'
+                    'title': 'Heart rate',
+                    'overlaying': 'y',
+                    'side': 'right'
                 }
             }
         }
     )
 
 def get_cycling_summary_table(cycling_activity):
-    '''
-
-    name
-    description
-    [photos][primary][urls][600]
-    '''
     return html.Table(
         html.Tbody(
             [
                 html.Tr(
                     [
-                        html.Th('Distance'),
-                        html.Td(cycling_activity['distance'])
+                        html.Th(TITLE_DISTANCE),
+                        html.Td(cycling_activity[STRAVA_API_KEY_DISTANCE])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Time (moving)'),
-                        html.Td(cycling_activity['moving_time'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_MOVING_TIME])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Time (elapsed)'),
-                        html.Td(cycling_activity['elapsed_time'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_ELAPSED_TIME])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Speed (average)'),
-                        html.Td(cycling_activity['average_speed'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_SPEED])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Speed (max)'),
-                        html.Td(cycling_activity['max_speed'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_MAX_SPEED])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Power (average)'),
-                        html.Td(cycling_activity['average_watts'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_POWER])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Power (weighted average)'),
-                        html.Td(cycling_activity['weighted_average_watts'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_WEIGHTED_POWER])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Power (max)'),
-                        html.Td(cycling_activity['max_watts'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_MAX_POWER])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Heartrate (average)'),
-                        html.Td(cycling_activity.get('average_heartrate', EMPTY_PLACEHOLDER))
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_HEARTRATE, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Heartrate (max)'),
-                        html.Td(cycling_activity.get('max_heartrate', EMPTY_PLACEHOLDER))
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_HEARTRATE, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Elevation gain'),
-                        html.Td(cycling_activity['total_elevation_gain'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_ELEVATION_GAIN])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Cadence (average)'),
-                        html.Td(cycling_activity['average_cadence'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_CADENCE])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Calories'),
-                        html.Td(cycling_activity['calories'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_CALORIES])
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Suffer score'),
-                        html.Td(cycling_activity['suffer_score'])
+                        html.Td(cycling_activity[STRAVA_API_KEY_SUFFER_SCORE])
                     ]
                 ),
             ]
