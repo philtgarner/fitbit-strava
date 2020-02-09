@@ -354,6 +354,7 @@ def cycling(query):
         power_averages = api_strava.get_cycling_activity_power_stats(cycling_activity_stream)
 
         body_composition = api_fitbit.get_weight(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT))
+        day_heartrate = api_fitbit.get_heart_rate_detailed(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT))
 
         return dbc.Container(
             [
@@ -410,6 +411,17 @@ def cycling(query):
                             [
                                 html.H3("Maximum power"),
                                 ui_power.get_cycling_average_power_table(power_averages, body_composition)
+                            ],
+                            md=12,
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Recovery heartrate"),
+                                ui_heartrate.get_heartrate_recovery(cycling_activity_stream, day_heartrate, datetime.strptime(cycling_activity[STRAVA_API_KEY_ACTIVITY_START], UTC_DATE_FORMAT))
                             ],
                             md=12,
                         )
