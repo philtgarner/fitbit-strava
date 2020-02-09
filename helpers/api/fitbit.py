@@ -46,8 +46,8 @@ def get_weight(access_token: str, weight_day: datetime):
 
     df_before = pd.DataFrame(
         {
-            'fat': list(map(lambda w: w['fat'], month_before['weight'])),
-            'weight': list(map(lambda w: w['weight'], month_before['weight']))
+            'fat': list(map(lambda w: w.get('fat', None), month_before['weight'])),
+            'weight': list(map(lambda w: w.get('weight', None), month_before['weight']))
         },
         index=list(map(lambda w: datetime.strptime(w['date'], '%Y-%m-%d'), month_before['weight']))
     )
@@ -60,8 +60,8 @@ def get_weight(access_token: str, weight_day: datetime):
 
     df_after = pd.DataFrame(
         {
-            'fat': list(map(lambda w: w['fat'], month_after['weight'])),
-            'weight': list(map(lambda w: w['weight'], month_after['weight']))
+            'fat': list(map(lambda w: w.get('fat', None), month_after['weight'])),
+            'weight': list(map(lambda w: w.get('weight', None), month_after['weight']))
         },
         index=list(map(lambda w: datetime.strptime(w['date'], '%Y-%m-%d'), month_after['weight']))
     )

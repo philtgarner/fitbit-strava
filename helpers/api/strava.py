@@ -21,10 +21,15 @@ def get_strava_activity(access_token: str, activity_id: str):
 
 
 def get_cycling_activity_power_stats(cycling_activity_stream):
+    time = list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))
+    power = list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))
+    hr = list(filter(lambda f: f['type'] == 'heartrate', cycling_activity_stream))
+    empty = [None] * len(time[0]['data'])
+
     data = {
-        'time': list(map(lambda t: t / 60, list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))[0]['data'])),
-        'power': list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))[0]['data'],
-        'hr': list(filter(lambda f: f['type'] == 'heartrate', cycling_activity_stream))[0]['data']
+        'time': list(map(lambda t: t / 60, time[0]['data'])),
+        'power': power[0]['data'] if len(power) > 0 else empty,
+        'hr': hr[0]['data'] if len(hr) > 0 else empty
     }
 
     headers = ['time', 'power', 'hr']
