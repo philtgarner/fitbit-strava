@@ -59,7 +59,7 @@ def get_heartrate_recovery(cycling_activity_stream, day_heartrate, activity_star
     empty = [None] * len(activity_dates[0][STRAVA_API_KEY_DATA_STREAM_DATA])
 
     activity_dates = list(map(lambda t: (activity_start + timedelta(seconds=t)), activity_dates[0][STRAVA_API_KEY_DATA_STREAM_DATA]))
-    activity_hr = activity_hr[0][STRAVA_API_KEY_DATA_STREAM_DATA] if len(activity_hr) > 0 else empty
+    activity_hr = list(map(lambda h: h if h > 0 else None, activity_hr[0][STRAVA_API_KEY_DATA_STREAM_DATA])) if len(activity_hr) > 0 else empty
 
     return dcc.Graph(
         id='detailed-hr',

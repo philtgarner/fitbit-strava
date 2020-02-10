@@ -120,7 +120,7 @@ def get_cycling_activity_graph(cycling_activity_stream):
 
     time = list(map(lambda t: t / 60, time[0][STRAVA_API_KEY_DATA_STREAM_DATA]))
     power = power[0][STRAVA_API_KEY_DATA_STREAM_DATA] if len(power) > 0 else empty
-    hr = hr[0][STRAVA_API_KEY_DATA_STREAM_DATA] if len(hr) > 0 else empty
+    hr = list(map(lambda h: h if h > 0 else None, hr[0][STRAVA_API_KEY_DATA_STREAM_DATA])) if len(hr) > 0 else empty
 
     return dcc.Graph(
         id='cycling-power-hr',
