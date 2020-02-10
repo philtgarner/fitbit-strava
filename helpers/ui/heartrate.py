@@ -4,8 +4,9 @@ import helpers.constants as constants
 from helpers.constants import *
 
 def get_detailed_heart_rate_graph(heart_rate_details):
-    dates = list(map(lambda x: x['time'], heart_rate_details['activities-heart-intraday']['dataset']))
-    detailed_hr = list(map(lambda x: x['value'], heart_rate_details['activities-heart-intraday']['dataset']))
+    start_date = heart_rate_details[FITBIT_API_KEY_HR_ACTIVITY][0][FITBIT_API_KEY_DATETIME]
+    dates = list(map(lambda x: datetime.strptime(f'{start_date}T{x[FITBIT_API_KEY_INTRADAY_TIME]}Z', UTC_DATE_FORMAT), heart_rate_details[FITBIT_API_KEY_HR_INTRADAY][FITBIT_API_KEY_INTRADAY_DATASET]))
+    detailed_hr = list(map(lambda x: x[FITBIT_API_KEY_INTRADAY_VALUE], heart_rate_details[FITBIT_API_KEY_HR_INTRADAY][FITBIT_API_KEY_INTRADAY_DATASET]))
 
     return dcc.Graph(
         id='detailed-hr',
@@ -24,10 +25,10 @@ def get_detailed_heart_rate_graph(heart_rate_details):
 
 
 def get_resting_heart_rate_graph(heart_rate_history):
-    dates = list(map(lambda x: x['dateTime'], heart_rate_history['activities-heart']))
+    dates = list(map(lambda x: x[FITBIT_API_KEY_DATETIME], heart_rate_history[FITBIT_API_KEY_HR_ACTIVITY]))
 
     # TODO Handle things if there is no resting heart rate for the day (probably caused by not syncing yet?)
-    resting_hr = list(map(lambda x: x['value'].get('restingHeartRate', None), heart_rate_history['activities-heart']))
+    resting_hr = list(map(lambda x: x['value'].get('restingHeartRate', None), heart_rate_history[FITBIT_API_KEY_HR_ACTIVITY]))
 
     return dcc.Graph(
         id='resting-hr',
@@ -44,8 +45,8 @@ def get_resting_heart_rate_graph(heart_rate_history):
         }
     )
 
-def get_heartrate_recovery(cycling_activity_stream, day_heartrate, activity_start: datetime):
 
+def get_heartrate_recovery(cycling_activity_stream, day_heartrate, activity_start: datetime):
     activity_start_date_string = activity_start.strftime(DATE_ONLY)
     day_dates = list(map(lambda x: datetime.strptime(f'{activity_start_date_string}T{x["time"]}Z', UTC_DATE_FORMAT), day_heartrate['activities-heart-intraday']['dataset']))
     day_hr = list(map(lambda x: x['value'], day_heartrate['activities-heart-intraday']['dataset']))
