@@ -72,7 +72,7 @@ def get_sleep_history_graph(sleep_history):
             'layout': {
                 'barmode': 'stack',
                 'title': '30 day sleep record',
-                'colorway': ['#154BA6', '#3F8DFF', '#7EC4FF', '#E73360', '#FF0000', '#00FF00', '#0000FF']
+                'colorway': [constants.COLOUR_SLEEP_DEEP, constants.COLOUR_SLEEP_LIGHT, constants.COLOUR_SLEEP_REM, constants.COLOUR_SLEEP_WAKE, '#FF0000', '#00FF00', '#0000FF']
             }
         },
     )

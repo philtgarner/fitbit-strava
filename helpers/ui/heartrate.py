@@ -70,14 +70,14 @@ def get_heartrate_recovery(cycling_activity_stream, day_heartrate, activity_star
                     'y': day_hr,
                     'name': 'Fitbit heartrate',
                     'mode': 'line',
-                    'line': {'color': constants.COLOUR_RED}
+                    'line': {'color': constants.COLOUR_FITBIT_BLUE}
                 },
                 {
                     'x': activity_dates,
                     'y': activity_hr,
                     'name': 'Strava heartrate',
                     'mode': 'line',
-                    'line': {'color': constants.COLOUR_BLUE}
+                    'line': {'color': constants.COLOUR_STRAVA_ORANGE}
                 }
             ]
         }
