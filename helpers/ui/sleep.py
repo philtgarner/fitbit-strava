@@ -99,20 +99,25 @@ def get_sleep_efficiency_graph(sleep_history):
 
 
 def get_detailed_sleep_graph(sleep_data):
-    sleep_periods = sleep_data['sleep'][0]['levels']['data']
+    graphs = list()
+    for sleep_day in sleep_data['sleep']:
+        sleep_periods = sleep_day['levels']['data']
 
-    gantt_chart_data = list(map(sleep_period_to_gantt_element, sleep_periods))
+        gantt_chart_data = list(map(sleep_period_to_gantt_element, sleep_periods))
 
-    gantt_chart_data = sorted(gantt_chart_data, key=lambda g: g['Level'], reverse=True)
+        gantt_chart_data = sorted(gantt_chart_data, key=lambda g: g['Level'], reverse=True)
 
-    colours = dict(Awake=constants.COLOUR_SLEEP_WAKE,
-                  REM=constants.COLOUR_SLEEP_REM,
-                  Deep=constants.COLOUR_SLEEP_DEEP,
-                  Light=constants.COLOUR_SLEEP_LIGHT)
+        colours = dict(Awake=constants.COLOUR_SLEEP_WAKE,
+                      REM=constants.COLOUR_SLEEP_REM,
+                      Deep=constants.COLOUR_SLEEP_DEEP,
+                      Light=constants.COLOUR_SLEEP_LIGHT)
 
-    fig = ff.create_gantt(gantt_chart_data, group_tasks=True, index_col='Task', colors=colours, title=None)
+        fig = ff.create_gantt(gantt_chart_data, group_tasks=True, index_col='Task', colors=colours, title=None)
 
-    return dcc.Graph(figure=fig, id='gantt')
+        graphs.append(dcc.Graph(figure=fig, id='gantt'))
+
+    # Reverse the list of graphs to get them in tme order
+    return graphs[::-1]
 
 
 def sleep_period_to_gantt_element(sleep_period):
