@@ -12,6 +12,8 @@ URL_BASE = '/'
 # Date formats
 DISPLAY_DATE_FORMAT = '%b %d %Y %H:%M'
 UTC_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+FITBIT_SLEEP_TIME = '%Y-%m-%dT%H:%M:%S.000'
+GANTT_CHART_TIME = '%Y-%m-%d %H:%M:%S'
 DATE_ONLY = '%Y-%m-%d'
 
 # Colours

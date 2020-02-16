@@ -355,6 +355,7 @@ def cycling(query):
 
         body_composition = api_fitbit.get_weight(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT))
         day_heartrate = api_fitbit.get_heart_rate_detailed(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT), '1sec')
+        sleep = api_fitbit.get_sleep_history(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT), 0)
 
         return dbc.Container(
             [
@@ -422,6 +423,17 @@ def cycling(query):
                             [
                                 html.H3("Recovery heartrate"),
                                 ui_heartrate.get_heartrate_recovery(cycling_activity_stream, day_heartrate, datetime.strptime(cycling_activity[STRAVA_API_KEY_ACTIVITY_START], UTC_DATE_FORMAT))
+                            ],
+                            md=12,
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3("Sleep"),
+                                ui_sleep.get_detailed_sleep_graph(sleep)
                             ],
                             md=12,
                         )

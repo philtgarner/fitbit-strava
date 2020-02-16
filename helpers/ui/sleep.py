@@ -1,6 +1,8 @@
 import dash_core_components as dcc
 import helpers.constants as constants
 import dash_html_components as html
+from datetime import datetime, timedelta
+import plotly.figure_factory as ff
 
 
 def get_sleep_history_graph(sleep_history):
@@ -96,3 +98,18 @@ def get_sleep_efficiency_graph(sleep_history):
     )
 
 
+def get_detailed_sleep_graph(sleep_data):
+    sleep_periods = sleep_data['sleep'][0]['levels']['data']
+
+    gantt_chart_data = list(map(sleep_period_to_gantt_element, sleep_periods))
+
+    fig = ff.create_gantt(gantt_chart_data, group_tasks=True)
+    return dcc.Graph(figure=fig, id='gantt')
+
+
+def sleep_period_to_gantt_element(sleep_period):
+    start_time = datetime.strptime(sleep_period['dateTime'], constants.FITBIT_SLEEP_TIME)
+    end_time = start_time + timedelta(seconds=sleep_period['seconds'])
+    current_phase = sleep_period['level']
+
+    return dict(Task=current_phase, Start = start_time.strftime(constants.GANTT_CHART_TIME), Finish=end_time.strftime(constants.GANTT_CHART_TIME))
