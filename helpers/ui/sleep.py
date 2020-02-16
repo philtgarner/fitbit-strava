@@ -103,7 +103,15 @@ def get_detailed_sleep_graph(sleep_data):
 
     gantt_chart_data = list(map(sleep_period_to_gantt_element, sleep_periods))
 
-    fig = ff.create_gantt(gantt_chart_data, group_tasks=True)
+    gantt_chart_data = sorted(gantt_chart_data, key=lambda g: g['Level'], reverse=True)
+
+    colours = dict(Awake=constants.COLOUR_SLEEP_WAKE,
+                  REM=constants.COLOUR_SLEEP_REM,
+                  Deep=constants.COLOUR_SLEEP_DEEP,
+                  Light=constants.COLOUR_SLEEP_LIGHT)
+
+    fig = ff.create_gantt(gantt_chart_data, group_tasks=True, index_col='Task', colors=colours, title=None)
+
     return dcc.Graph(figure=fig, id='gantt')
 
 
@@ -112,4 +120,30 @@ def sleep_period_to_gantt_element(sleep_period):
     end_time = start_time + timedelta(seconds=sleep_period['seconds'])
     current_phase = sleep_period['level']
 
-    return dict(Task=current_phase, Start = start_time.strftime(constants.GANTT_CHART_TIME), Finish=end_time.strftime(constants.GANTT_CHART_TIME))
+    return dict(Task=get_sleep_name(current_phase), Start = start_time.strftime(constants.GANTT_CHART_TIME), Finish=end_time.strftime(constants.GANTT_CHART_TIME), Level=get_sleep_level(current_phase))
+
+
+def get_sleep_name(sleep_phase):
+    if sleep_phase == 'wake':
+        return 'Awake'
+    elif sleep_phase == 'rem':
+        return 'REM'
+    elif sleep_phase == 'deep':
+        return 'Deep'
+    elif sleep_phase == 'light':
+        return 'Light'
+    else:
+        return 'Unknown'
+
+
+def get_sleep_level(sleep_phase):
+    if sleep_phase == 'wake':
+        return 4
+    elif sleep_phase == 'rem':
+        return 3
+    elif sleep_phase == 'deep':
+        return 1
+    elif sleep_phase == 'light':
+        return 2
+    else:
+        return 999
