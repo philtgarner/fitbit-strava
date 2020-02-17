@@ -23,13 +23,14 @@ def get_heart_rate_detailed(access_token: str, day: datetime = None, detail: str
 
 
 def get_sleep_history(access_token: str, end: datetime = None, duration: int = 30):
-    # TODO I think we need to get the end date and then format it here
     if end is None:
-        end = datetime.strftime(datetime.now(), '%Y-%m-%d')
-    start = datetime.strftime(datetime.now() - timedelta(days=duration), '%Y-%m-%d')
+        end = datetime.now()
+
+    end_string = datetime.strftime(end, '%Y-%m-%d')
+    start = datetime.strftime(end - timedelta(days=duration), '%Y-%m-%d')
 
     # Get some data
-    endpoint = f'https://api.fitbit.com/1.2/user/-/sleep/date/{start}/{end}.json'
+    endpoint = f'https://api.fitbit.com/1.2/user/-/sleep/date/{start}/{end_string}.json'
     headers = {"Authorization": f"Bearer {access_token}"}
     return requests.get(endpoint, headers=headers).json()
 
