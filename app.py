@@ -79,7 +79,7 @@ def login():
                                 'Fitbit log in',
                                 href=get_fitbit_login_url(),
                                 color='dark',
-                                style={'background-color': COLOUR_FITBIT_BLUE},
+                                style={'backgroundColor': COLOUR_FITBIT_BLUE},
                                 block=True,
                                 className='mr-1'
                             )
@@ -92,7 +92,7 @@ def login():
                                 'Strava log in',
                                 href=get_strava_login_url(),
                                 color='dark',
-                                style={'background-color': COLOUR_STRAVA_ORANGE},
+                                style={'backgroundColor': COLOUR_STRAVA_ORANGE},
                                 block=True,
                                 className='mr-1'
                             )
