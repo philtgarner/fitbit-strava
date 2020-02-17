@@ -175,7 +175,7 @@ def get_detailed_sleep_graph(sleep_data):
                       Deep=constants.COLOUR_SLEEP_DEEP,
                       Light=constants.COLOUR_SLEEP_LIGHT)
 
-        fig = ff.create_gantt(gantt_chart_data, group_tasks=True, index_col='Task', colors=colours, title=None)
+        fig = ff.create_gantt(gantt_chart_data, group_tasks=True, index_col='Task', colors=colours, title=None, height=None)
 
         row = dbc.Row(
             [
@@ -209,7 +209,13 @@ def sleep_period_to_gantt_element(sleep_period):
     end_time = start_time + timedelta(seconds=sleep_period['seconds'])
     current_phase = sleep_period['level']
 
-    return dict(Task=get_sleep_name(current_phase), Start = start_time.strftime(constants.GANTT_CHART_TIME), Finish=end_time.strftime(constants.GANTT_CHART_TIME), Level=get_sleep_level(current_phase))
+    return dict(
+        Task=get_sleep_name(current_phase),
+        Start = start_time.strftime(constants.GANTT_CHART_TIME),
+        Finish=end_time.strftime(constants.GANTT_CHART_TIME),
+        Level=get_sleep_level(current_phase),
+        Description=f'Duration: {str(end_time - start_time)}'
+    )
 
 
 def get_sleep_name(sleep_phase):
