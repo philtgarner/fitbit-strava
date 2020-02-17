@@ -433,12 +433,12 @@ def cycling(query):
                         dbc.Col(
                             [
                                 html.H3("Sleep"),
-                                *ui_sleep.get_detailed_sleep_graph(sleep)
                             ],
                             md=12,
                         )
                     ]
                 ),
+                *ui_sleep.get_detailed_sleep_graph(sleep)
             ],
             className="mt-4",
         )

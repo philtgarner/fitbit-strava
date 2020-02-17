@@ -3,6 +3,7 @@ import helpers.constants as constants
 import dash_html_components as html
 from datetime import datetime, timedelta
 import plotly.figure_factory as ff
+import dash_bootstrap_components as dbc
 
 
 def get_sleep_history_graph(sleep_history):
@@ -98,6 +99,68 @@ def get_sleep_efficiency_graph(sleep_history):
     )
 
 
+def get_detailed_sleep_table(sleep_day):
+    total_duration = timedelta(milliseconds=sleep_day['duration'])
+    deep_duration = timedelta(minutes=sleep_day['levels']['summary']['deep']['minutes'])
+    light_duration = timedelta(minutes=sleep_day['levels']['summary']['light']['minutes'])
+    rem_duration = timedelta(minutes=sleep_day['levels']['summary']['rem']['minutes'])
+    awake_duration = timedelta(minutes=sleep_day['levels']['summary']['wake']['minutes'])
+
+    return html.Table(
+        [
+            html.Thead(
+                html.Tr(
+                    [
+                        html.Th('Phase'),
+                        html.Th('Time'),
+                        html.Th('Percentage'),
+                    ]
+                )
+            ),
+            html.Tbody(
+                [
+                    html.Tr(
+                        [
+                            html.Td('Total'),
+                            html.Td(str(total_duration)),
+                            html.Td(constants.EMPTY_PLACEHOLDER),
+                        ]
+                    ),
+                    html.Tr(
+                        [
+                            html.Td('Awake'),
+                            html.Td(str(awake_duration)),
+                            html.Td(round(awake_duration / total_duration * 100, 1)),
+                        ]
+                    ),
+                    html.Tr(
+                        [
+                            html.Td('REM'),
+                            html.Td(str(rem_duration)),
+                            html.Td(round(rem_duration / total_duration * 100, 1)),
+                        ]
+                    ),
+                    html.Tr(
+                        [
+                            html.Td('Light'),
+                            html.Td(str(light_duration)),
+                            html.Td(round(light_duration / total_duration * 100, 1)),
+                        ]
+                    ),
+                    html.Tr(
+                        [
+                            html.Td('Deep'),
+                            html.Td(str(deep_duration)),
+                            html.Td(round(deep_duration / total_duration * 100, 1)),
+                        ]
+                    ),
+                ]
+            )
+        ],
+        className='table table-hover'
+    )
+
+
 def get_detailed_sleep_graph(sleep_data):
     graphs = list()
     for sleep_day in sleep_data['sleep']:
@@ -114,10 +177,31 @@ def get_detailed_sleep_graph(sleep_data):
 
         fig = ff.create_gantt(gantt_chart_data, group_tasks=True, index_col='Task', colors=colours, title=None)
 
-        graphs.append(dcc.Graph(figure=fig, id='gantt'))
+        row = dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dcc.Graph(figure=fig, id='gantt')
+                    ],
+                    md=10,
+                ),
+                dbc.Col(
+                    [
+                        html.H2('Summary'),
+                        get_detailed_sleep_table(sleep_day)
+                    ],
+                    md=2,
+                )
+            ]
+        )
+
+        graphs.append(row)
 
     # Reverse the list of graphs to get them in tme order
     return graphs[::-1]
+
+
+
 
 
 def sleep_period_to_gantt_element(sleep_period):
