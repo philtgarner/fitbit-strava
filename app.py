@@ -57,6 +57,8 @@ app.layout = html.Div([
 
 
 def login():
+
+
     return dbc.Container(
         [
             dbc.Row(
@@ -73,15 +75,27 @@ def login():
                 [
                     dbc.Col(
                         [
-                            html.H4("Fitbit"),
-                            html.A('Log in', href=get_fitbit_login_url())
+                            dbc.Button(
+                                'Fitbit log in',
+                                href=get_fitbit_login_url(),
+                                color='dark',
+                                style={'background-color': COLOUR_FITBIT_BLUE},
+                                block=True,
+                                className='mr-1'
+                            )
                         ],
                         md=6,
                     ),
                     dbc.Col(
                         [
-                            html.H4("Strava"),
-                            html.A('Log in', href=get_strava_login_url())
+                            dbc.Button(
+                                'Strava log in',
+                                href=get_strava_login_url(),
+                                color='dark',
+                                style={'background-color': COLOUR_STRAVA_ORANGE},
+                                block=True,
+                                className='mr-1'
+                            )
                         ],
                         md=6,
                     )
@@ -197,28 +211,70 @@ def get_strava_access_token(query):
 
 def fitbit_auth(query):
     if get_fitbit_access_token(query):
-        return html.Div([
-            html.H3('Fitbit authenticated'),
-            dcc.Link('Dashboard', href=URL_DASHBOARD),
-            dcc.Link('Home', href='/')
-        ])
-    return html.Div([
-        html.H3('Fitbit authentication error'),
-        html.P('An error occurred')
-    ])
+        return dbc.Container(
+            [
+                dbc.Row(
+                    [
+                        html.H3('Fitbit authenticated'),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1'),
+                        dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1')
+                    ]
+                ),
+            ]
+        )
+    return dbc.Container(
+        [
+            dbc.Row(
+                [
+                    html.H3('Fitbit authentication error'),
+                    html.P('An error occurred')
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1')
+                ]
+            ),
+        ]
+    )
 
 
 def strava_auth(query):
     if get_strava_access_token(query):
-        return html.Div([
-            html.H3('Strava authenticated'),
-            dcc.Link('Dashboard', href=URL_DASHBOARD),
-            dcc.Link('Home', href='/')
-        ])
-    return html.Div([
-        html.H3('Strava authentication error'),
-        html.P('An error occurred')
-    ])
+        return dbc.Container(
+            [
+                dbc.Row(
+                    [
+                        html.H3('Strava authenticated'),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1'),
+                        dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1')
+                    ]
+                ),
+            ]
+        )
+    return dbc.Container(
+        [
+            dbc.Row(
+                [
+                    html.H3('Strava authentication error'),
+                    html.P('An error occurred')
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1')
+                ]
+            ),
+        ]
+    )
 
 
 def dashboard():
