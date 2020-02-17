@@ -1,11 +1,6 @@
-import base64
-import json
-import urllib.parse as urlparse
-from urllib.parse import parse_qs
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import requests
 import yaml
 import dash_bootstrap_components as dbc
 from flask_session import Session
@@ -19,6 +14,9 @@ import helpers.ui.body_composition as ui_body_composition
 import helpers.ui.power as ui_power
 import helpers.ui.sleep as ui_sleep
 import helpers.ui.strava_activities as ui_strava
+import helpers.common as common
+import helpers.auth.strava_auth as auth_strava
+import helpers.auth.fitbit_auth as auth_fitbit
 from helpers.constants import *
 
 
@@ -117,100 +115,8 @@ def get_strava_login_url():
     return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=auto&scope=read,read_all,activity:read,activity:read_all'
 
 
-def get_fitbit_access_token(query):
-    if session.get(SESSION_FITBIT_ACCESS_TOKEN_KEY, None) is None:
-        config = yaml.safe_load(open("config.yml"))
-        client_id = config['fitbit']['client_id']
-        client_secret = config['fitbit']['client_secret']
-
-        # Encode the client ID and secret for authentication when requesting a token
-        auth = str(base64.b64encode(bytes(f'{client_id}:{client_secret}', 'utf-8')), "utf-8")
-
-        # Get the code from the permission request response
-        code = get_parameter(query, 'code')
-
-        # Get an authorisation token
-        endpoint = "https://api.fitbit.com/oauth2/token"
-        data = {'clientId': client_id, 'grant_type': 'authorization_code',
-                'redirect_uri': 'http://127.0.0.1:5000/fitbitauth',
-                'code': code}
-        headers = {"Authorization": f"Basic {auth}",
-                   'Content-Type': 'application/x-www-form-urlencoded'}
-
-        output = json.loads(requests.post(endpoint, data=data, headers=headers).text)
-
-        # A successful call returns the following data:
-        # - access_token
-        # - expires_in
-        # - refresh_token
-        # - scope
-        # - user_id
-        if 'access_token' in output:
-            session[SESSION_FITBIT_ACCESS_TOKEN_KEY] = output['access_token']
-
-            # Access token saved to session for subsequent calls - success
-            return True
-
-        # We failed to get an access token for some reason
-        # TODO Add some proper error handling here
-        return False
-
-    # If we already have an access token then there's no need to look again for one
-    return True
-
-
-def get_strava_access_token(query):
-    if session.get(SESSION_STRAVA_ACCESS_TOKEN_KEY, None) is None:
-        config = yaml.safe_load(open("config.yml"))
-        client_id = config['strava']['client_id']
-        client_secret = config['strava']['client_secret']
-
-        # Get the code from the permission request response
-        code = get_parameter(query, 'code')
-
-        # Get an authorisation token
-        endpoint = "https://www.strava.com/oauth/token"
-        data = {'client_id': client_id, 'client_secret': client_secret, 'grant_type': 'authorization_code',
-                'code': code}
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-        output = json.loads(requests.post(endpoint, data=data, headers=headers).text)
-
-        # A successful call returns the following data:
-        '''{
-            "token_type": "Bearer",
-            "expires_at": 1562908002,
-            "expires_in": 21600,
-            "refresh_token": "REFRESHTOKEN",
-            "access_token": "ACCESSTOKEN",
-            "athlete": {
-                "id": 123456,
-                "username": "MeowTheCat",
-                "resource_state": 2,
-                "firstname": "Meow",
-                "lastname": "TheCat",
-                "city": "",
-                "state": "",
-                "country": null,
-                ...
-            }
-        }'''
-        if 'access_token' in output:
-            session[SESSION_STRAVA_ACCESS_TOKEN_KEY] = output['access_token']
-
-            # Access token saved to session for subsequent calls - success
-            return True
-
-        # We failed to get an access token for some reason
-        # TODO Add some proper error handling here
-        return False
-
-    # If we already have an access token then there's no need to look again for one
-    return True
-
-
 def fitbit_auth(query):
-    if get_fitbit_access_token(query):
+    if auth_fitbit.get_fitbit_access_token(query):
         return dbc.Container(
             [
                 dbc.Row(
@@ -244,7 +150,7 @@ def fitbit_auth(query):
 
 
 def strava_auth(query):
-    if get_strava_access_token(query):
+    if auth_strava.get_strava_access_token(query):
         return dbc.Container(
             [
                 dbc.Row(
@@ -402,7 +308,7 @@ def dashboard():
 def cycling(query):
     fitbit_access_token = session.get(SESSION_FITBIT_ACCESS_TOKEN_KEY, None)
     strava_access_token = session.get(SESSION_STRAVA_ACCESS_TOKEN_KEY, None)
-    activity_id = get_parameter(query, 'activity')[0]
+    activity_id = common.get_parameter(query, 'activity')[0]
     if fitbit_access_token is not None and strava_access_token is not None and activity_id is not None:
 
         cycling_activity = api_strava.get_strava_activity(strava_access_token, activity_id)
@@ -504,15 +410,6 @@ def cycling(query):
             html.H3('Auth'),
             html.P('An error occurred')
         ])
-
-
-def get_parameter(query, param):
-    url = f'http://example.org{query}'
-    parsed = urlparse.urlparse(url)
-    try:
-        return parse_qs(parsed.query)[param]
-    except KeyError:
-        return None
 
 
 @app.callback(dash.dependencies.Output('page-content', 'children'),
