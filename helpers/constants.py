@@ -1,6 +1,10 @@
 # Session variables
 SESSION_FITBIT_ACCESS_TOKEN_KEY = 'fitbit_access_token'
+SESSION_FITBIT_REFRESH_TOKEN_KEY = 'fitbit_refresh_token'
+SESSION_FITBIT_EXPIRES_KEY = 'fitbit_expires'
 SESSION_STRAVA_ACCESS_TOKEN_KEY = 'strava_access_token'
+SESSION_STRAVA_REFRESH_TOKEN_KEY = 'strava_refresh_token'
+SESSION_STRAVA_EXPIRES_KEY = 'strava_expires'
 
 # URL endpoints
 URL_CYCLING = '/cycling'

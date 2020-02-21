@@ -55,8 +55,6 @@ app.layout = html.Div([
 
 
 def login():
-
-
     return dbc.Container(
         [
             dbc.Row(
@@ -116,7 +114,7 @@ def get_strava_login_url():
 
 
 def fitbit_auth(query):
-    if auth_fitbit.get_fitbit_access_token(query):
+    if auth_fitbit.parse_query_for_access_token(query):
         return dbc.Container(
             [
                 dbc.Row(
@@ -150,7 +148,7 @@ def fitbit_auth(query):
 
 
 def strava_auth(query):
-    if auth_strava.get_strava_access_token(query):
+    if auth_strava.parse_query_for_access_token(query):
         return dbc.Container(
             [
                 dbc.Row(
@@ -184,9 +182,11 @@ def strava_auth(query):
 
 
 def dashboard():
-    fitbit_access_token = session.get(SESSION_FITBIT_ACCESS_TOKEN_KEY, None)
-    strava_access_token = session.get(SESSION_STRAVA_ACCESS_TOKEN_KEY, None)
-    if fitbit_access_token is not None and strava_access_token is not None:
+    if auth_fitbit.ensure_valid_access_token() and auth_strava.ensure_valid_access_token():
+
+        # Get the access tokens (now we have checked to ensure they're valid)
+        strava_access_token = session.get(SESSION_STRAVA_ACCESS_TOKEN_KEY, None)
+        fitbit_access_token = session.get(SESSION_FITBIT_ACCESS_TOKEN_KEY, None)
 
         # Get Fitbit data
         heart_rate_history = api_fitbit.get_heart_rate_history(fitbit_access_token)
@@ -306,10 +306,12 @@ def dashboard():
 
 
 def cycling(query):
-    fitbit_access_token = session.get(SESSION_FITBIT_ACCESS_TOKEN_KEY, None)
-    strava_access_token = session.get(SESSION_STRAVA_ACCESS_TOKEN_KEY, None)
     activity_id = common.get_parameter(query, 'activity')[0]
-    if fitbit_access_token is not None and strava_access_token is not None and activity_id is not None:
+    if auth_fitbit.ensure_valid_access_token() and auth_strava.ensure_valid_access_token():
+
+        # Get the access tokens (now we have checked to ensure they're valid)
+        strava_access_token = session.get(SESSION_STRAVA_ACCESS_TOKEN_KEY, None)
+        fitbit_access_token = session.get(SESSION_FITBIT_ACCESS_TOKEN_KEY, None)
 
         cycling_activity = api_strava.get_strava_activity(strava_access_token, activity_id)
         cycling_activity_stream = api_strava.get_strava_activity_stream(strava_access_token, activity_id)
