@@ -115,6 +115,37 @@ def get_strava_login_url():
 
 def fitbit_auth(query):
     if auth_fitbit.parse_query_for_access_token(query):
+
+        buttons = list()
+        if auth_strava.ensure_valid_access_token():
+            buttons = [
+                dbc.Col(
+                    [
+                        dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1', block=True),
+                    ]
+                )
+            ]
+        else:
+            buttons = [
+                dbc.Col(
+                    [
+                        dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1', block=True)
+                    ]
+                ),
+                dbc.Col(
+                    [
+                        dbc.Button(
+                            'Strava log in',
+                            href=get_strava_login_url(),
+                            color='dark',
+                            style={'backgroundColor': COLOUR_STRAVA_ORANGE},
+                            block=True,
+                            className='mr-1'
+                        )
+                    ]
+                )
+            ]
+
         return dbc.Container(
             [
                 dbc.Row(
@@ -123,10 +154,7 @@ def fitbit_auth(query):
                     ]
                 ),
                 dbc.Row(
-                    [
-                        dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1'),
-                        dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1')
-                    ]
+                    buttons
                 ),
             ]
         )
@@ -140,7 +168,7 @@ def fitbit_auth(query):
             ),
             dbc.Row(
                 [
-                    dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1')
+                    dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1', block=True)
                 ]
             ),
         ]
@@ -149,6 +177,36 @@ def fitbit_auth(query):
 
 def strava_auth(query):
     if auth_strava.parse_query_for_access_token(query):
+
+        buttons = list()
+        if auth_fitbit.ensure_valid_access_token():
+            buttons = [
+                dbc.Col(
+                    [
+                        dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1', block=True),
+                    ]
+                )
+            ]
+        else:
+            buttons = [
+                dbc.Col(
+                    [
+                        dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1', block=True)
+                    ]
+                ),
+                dbc.Col(
+                    [
+                        dbc.Button(
+                            'Fitbit log in',
+                            href=get_fitbit_login_url(),
+                            color='dark',
+                            style={'backgroundColor': COLOUR_FITBIT_BLUE},
+                            block=True,
+                            className='mr-1'
+                        )
+                    ]
+                )
+            ]
         return dbc.Container(
             [
                 dbc.Row(
@@ -157,10 +215,7 @@ def strava_auth(query):
                     ]
                 ),
                 dbc.Row(
-                    [
-                        dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1'),
-                        dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1')
-                    ]
+                    buttons
                 ),
             ]
         )
@@ -174,7 +229,7 @@ def strava_auth(query):
             ),
             dbc.Row(
                 [
-                    dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1')
+                    dbc.Button('Home', href=URL_BASE, color='primary', className='mr-1', block=True)
                 ]
             ),
         ]
