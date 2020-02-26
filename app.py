@@ -55,6 +55,53 @@ app.layout = html.Div([
 
 
 def login():
+
+    buttons = [
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dbc.Button(
+                            'Fitbit log in',
+                            href=get_fitbit_login_url(),
+                            color='dark',
+                            style={'backgroundColor': COLOUR_FITBIT_BLUE},
+                            block=True,
+                            className='mr-1'
+                        )
+                    ],
+                    md=6,
+                ),
+                dbc.Col(
+                    [
+                        dbc.Button(
+                            'Strava log in',
+                            href=get_strava_login_url(),
+                            color='dark',
+                            style={'backgroundColor': COLOUR_STRAVA_ORANGE},
+                            block=True,
+                            className='mr-1'
+                        )
+                    ],
+                    md=6,
+                )
+            ]
+        )
+    ]
+
+    if auth_fitbit.ensure_valid_access_token() and auth_strava.ensure_valid_access_token():
+        buttons.append(
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1', block=True),
+                        ]
+                    )
+                ]
+            )
+        )
+
     return dbc.Container(
         [
             dbc.Row(
@@ -67,36 +114,7 @@ def login():
                     )
                 ]
             ),
-            dbc.Row(
-                [
-                    dbc.Col(
-                        [
-                            dbc.Button(
-                                'Fitbit log in',
-                                href=get_fitbit_login_url(),
-                                color='dark',
-                                style={'backgroundColor': COLOUR_FITBIT_BLUE},
-                                block=True,
-                                className='mr-1'
-                            )
-                        ],
-                        md=6,
-                    ),
-                    dbc.Col(
-                        [
-                            dbc.Button(
-                                'Strava log in',
-                                href=get_strava_login_url(),
-                                color='dark',
-                                style={'backgroundColor': COLOUR_STRAVA_ORANGE},
-                                block=True,
-                                className='mr-1'
-                            )
-                        ],
-                        md=6,
-                    )
-                ]
-            )
+            *buttons
         ]
     )
 
