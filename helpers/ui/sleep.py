@@ -101,10 +101,10 @@ def get_sleep_efficiency_graph(sleep_history):
 
 def get_detailed_sleep_table(sleep_day):
     total_duration = timedelta(milliseconds=sleep_day['duration'])
-    deep_duration = timedelta(minutes=sleep_day['levels']['summary']['deep']['minutes'])
-    light_duration = timedelta(minutes=sleep_day['levels']['summary']['light']['minutes'])
-    rem_duration = timedelta(minutes=sleep_day['levels']['summary']['rem']['minutes'])
-    awake_duration = timedelta(minutes=sleep_day['levels']['summary']['wake']['minutes'])
+    deep_duration = timedelta(minutes=sleep_day['levels']['summary'].get('deep', {'minutes': 0})['minutes'])
+    light_duration = timedelta(minutes=sleep_day['levels']['summary'].get('light', {'minutes': 0})['minutes'])
+    rem_duration = timedelta(minutes=sleep_day['levels']['summary'].get('rem', {'minutes': 0})['minutes'])
+    awake_duration = timedelta(minutes=sleep_day['levels']['summary'].get('wake', {'minutes': 0})['minutes'])
 
     return html.Table(
         [
@@ -173,7 +173,9 @@ def get_detailed_sleep_graph(sleep_data):
         colours = dict(Awake=constants.COLOUR_SLEEP_WAKE,
                       REM=constants.COLOUR_SLEEP_REM,
                       Deep=constants.COLOUR_SLEEP_DEEP,
-                      Light=constants.COLOUR_SLEEP_LIGHT)
+                      Light=constants.COLOUR_SLEEP_LIGHT,
+                      Restless=constants.COLOUR_SLEEP_LIGHT,
+                      Asleep=constants.COLOUR_SLEEP_DEEP)
 
         fig = ff.create_gantt(gantt_chart_data, group_tasks=True, index_col='Task', colors=colours, title=None, height=None)
 
@@ -227,6 +229,12 @@ def get_sleep_name(sleep_phase):
         return 'Deep'
     elif sleep_phase == 'light':
         return 'Light'
+    elif sleep_phase == 'awake':
+        return 'Awake'
+    elif sleep_phase == 'restless':
+        return 'Restless'
+    elif sleep_phase == 'asleep':
+        return 'Asleep'
     else:
         return 'Unknown'
 
@@ -240,5 +248,11 @@ def get_sleep_level(sleep_phase):
         return 1
     elif sleep_phase == 'light':
         return 2
+    elif sleep_phase == 'awake':
+        return 3
+    elif sleep_phase == 'restless':
+        return 2
+    elif sleep_phase == 'asleep':
+        return 1
     else:
         return 999
