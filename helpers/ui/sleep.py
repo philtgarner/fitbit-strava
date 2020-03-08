@@ -185,14 +185,14 @@ def get_detailed_sleep_graph(sleep_data):
                     [
                         dcc.Graph(figure=fig, id='gantt')
                     ],
-                    md=10,
+                    md=9,
                 ),
                 dbc.Col(
                     [
                         html.H2('Summary'),
                         get_detailed_sleep_table(sleep_day)
                     ],
-                    md=2,
+                    md=3,
                 )
             ]
         )

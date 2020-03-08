@@ -400,82 +400,140 @@ def cycling(query):
                     [
                         dbc.Col(
                             [
-                                html.H1(cycling_activity[STRAVA_API_KEY_ACTIVITY_NAME]),
+                                html.H1(cycling_activity[STRAVA_API_KEY_ACTIVITY_NAME])
+                            ]
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
                                 html.H2(datetime.strptime(cycling_activity[STRAVA_API_KEY_ACTIVITY_START_LOCAL], UTC_DATE_FORMAT).strftime(DISPLAY_DATE_FORMAT)),
                                 html.P(cycling_activity[STRAVA_API_KEY_ACTIVITY_DESCRIPTION]),
-                            ],
-                            md=8,
+                            ]
                         ),
                         dbc.Col(
                             [
                                 ui_strava.get_activity_image(cycling_activity)
-                            ],
-                            md=4,
-                        )
-                    ]
-                ),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [
-                                html.H3("Summary"),
-                                ui_strava.get_cycling_summary_table(cycling_activity)
-                            ],
-                            md=6,
+                            ]
                         ),
                         dbc.Col(
                             [
-                                html.H3("Body composition"),
-                                ui_body_composition.get_body_composition_table(body_composition)
-                            ],
-                            md=6,
+                                ui_strava.get_cycling_mini_table(cycling_activity)
+                            ]
                         )
                     ]
                 ),
-                dbc.Row(
+                dcc.Tabs(
                     [
-                        dbc.Col(
-                            [
-                                html.H3("Power vs HR"),
-                                ui_strava.get_cycling_activity_graph(cycling_activity_stream)
-                            ],
-                            md=12,
+                        dcc.Tab(
+                            label='Summary',
+                            children=[
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            [
+                                                html.H3("Summary"),
+                                                ui_strava.get_cycling_summary_table(cycling_activity)
+                                            ],
+                                        )
+                                    ]
+                                ),
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            [
+                                                html.H3("Power vs HR"),
+                                                ui_strava.get_cycling_activity_graph(cycling_activity_stream)
+                                            ],
+                                            md=12,
+                                        )
+                                    ]
+                                ),
+                            ]
+                        ),
+                        dcc.Tab(
+                            label='Route',
+                            children=[
+                                dbc.Row(
+                                    dbc.Col(
+                                        ui_strava.get_cycling_route_table(cycling_activity)
+                                    )
+                                )
+                            ]
+                        ),
+                        dcc.Tab(
+                            label='Body composition',
+                            children=[
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            [
+                                                ui_body_composition.get_body_composition_table(body_composition)
+                                            ]
+                                        )
+                                    ]
+                                )
+                            ]
+                        ),
+                        dcc.Tab(
+                            label='Power',
+                            children=[
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            [
+                                                html.H3("Maximum power"),
+                                                ui_power.get_cycling_average_power_table(power_averages, body_composition)
+                                            ],
+                                            md=12,
+                                        )
+                                    ]
+                                ),
+                            ]
+                        ),
+                        dcc.Tab(
+                            label='Heartrate',
+                            children=[
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            [
+                                                html.H3("Recovery heartrate"),
+                                                ui_heartrate.get_heartrate_recovery(cycling_activity_stream,
+                                                                                    day_heartrate, datetime.strptime(
+                                                        cycling_activity[STRAVA_API_KEY_ACTIVITY_START],
+                                                        UTC_DATE_FORMAT))
+                                            ],
+                                            md=12,
+                                        )
+                                    ]
+                                ),
+                            ]
+                        ),
+                        dcc.Tab(
+                            label='Sleep',
+                            children=[
+                                dbc.Container(
+                                    [
+                                        dbc.Row(
+                                            [
+                                                dbc.Col(
+                                                    [
+                                                        html.H3("Sleep"),
+                                                    ],
+                                                    md=12,
+                                                )
+                                            ]
+                                        ),
+                                        *ui_sleep.get_detailed_sleep_graph(sleep)
+                                    ]
+                                )
+                            ]
                         )
                     ]
                 ),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [
-                                html.H3("Maximum power"),
-                                ui_power.get_cycling_average_power_table(power_averages, body_composition)
-                            ],
-                            md=12,
-                        )
-                    ]
-                ),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [
-                                html.H3("Recovery heartrate"),
-                                ui_heartrate.get_heartrate_recovery(cycling_activity_stream, day_heartrate, datetime.strptime(cycling_activity[STRAVA_API_KEY_ACTIVITY_START], UTC_DATE_FORMAT))
-                            ],
-                            md=12,
-                        )
-                    ]
-                ),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [
-                                html.H3("Sleep"),
-                            ],
-                            md=12,
-                        )
-                    ]
-                ),
-                *ui_sleep.get_detailed_sleep_graph(sleep)
             ],
             className="mt-4",
         )

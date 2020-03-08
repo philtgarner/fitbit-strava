@@ -98,12 +98,12 @@ def cycling_activity_to_tr(cycling_activity):
             html.Td(dcc.Link(cycling_activity[STRAVA_API_KEY_ACTIVITY_NAME], href=f'{URL_CYCLING}?activity={id}')),
             html.Td(datetime.strptime(cycling_activity[STRAVA_API_KEY_ACTIVITY_START_LOCAL], UTC_DATE_FORMAT).strftime(DISPLAY_DATE_FORMAT)),
             html.Td(str(timedelta(seconds=cycling_activity[STRAVA_API_KEY_MOVING_TIME]))),
-            html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_POWER]),
-            html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_WEIGHTED_POWER]),
-            html.Td(cycling_activity[STRAVA_API_KEY_MAX_POWER]),
-            html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_HEARTRATE]),
-            html.Td(cycling_activity[STRAVA_API_KEY_MAX_HEARTRATE]),
-            html.Td(cycling_activity[STRAVA_API_KEY_SUFFER_SCORE])
+            html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_POWER, EMPTY_PLACEHOLDER)),
+            html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_WEIGHTED_POWER, EMPTY_PLACEHOLDER)),
+            html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_POWER, EMPTY_PLACEHOLDER)),
+            html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_HEARTRATE, EMPTY_PLACEHOLDER)),
+            html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_HEARTRATE, EMPTY_PLACEHOLDER)),
+            html.Td(cycling_activity.get(STRAVA_API_KEY_SUFFER_SCORE, EMPTY_PLACEHOLDER))
         ]
     )
 
@@ -162,49 +162,49 @@ def get_cycling_summary_table(cycling_activity):
                 html.Tr(
                     [
                         html.Th(TITLE_DISTANCE),
-                        html.Td(cycling_activity[STRAVA_API_KEY_DISTANCE])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_DISTANCE, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Time (moving)'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_MOVING_TIME])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_MOVING_TIME, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Time (elapsed)'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_ELAPSED_TIME])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_ELAPSED_TIME, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Speed (average)'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_SPEED])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_SPEED, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Speed (max)'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_MAX_SPEED])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_SPEED, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Power (average)'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_POWER])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_POWER, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Power (weighted average)'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_WEIGHTED_POWER])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_WEIGHTED_POWER, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Power (max)'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_MAX_POWER])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_POWER, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
@@ -222,31 +222,112 @@ def get_cycling_summary_table(cycling_activity):
                 html.Tr(
                     [
                         html.Th('Elevation gain'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_ELEVATION_GAIN])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_ELEVATION_GAIN, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Cadence (average)'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_AVERAGE_CADENCE])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_CADENCE, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Calories'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_CALORIES])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_CALORIES, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
                     [
                         html.Th('Suffer score'),
-                        html.Td(cycling_activity[STRAVA_API_KEY_SUFFER_SCORE])
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_SUFFER_SCORE, EMPTY_PLACEHOLDER))
                     ]
                 ),
             ]
         ),
         className='table table-hover'
     )
+
+
+def get_cycling_route_table(cycling_activity):
+    return html.Table(
+        html.Tbody(
+            [
+                html.Tr(
+                    [
+                        html.Th(TITLE_DISTANCE),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_DISTANCE, EMPTY_PLACEHOLDER))
+                    ]
+                ),
+                html.Tr(
+                    [
+                        html.Th('Elevation gain'),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_ELEVATION_GAIN, EMPTY_PLACEHOLDER))
+                    ]
+                ),
+                html.Tr(
+                    [
+                        html.Th('Speed (average)'),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_SPEED, EMPTY_PLACEHOLDER))
+                    ]
+                ),
+                html.Tr(
+                    [
+                        html.Th('Speed (max)'),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_SPEED, EMPTY_PLACEHOLDER))
+                    ]
+                )
+            ]
+        ),
+        className='table table-hover'
+    )
+
+
+def get_cycling_mini_table(cycling_activity):
+    return html.Table(
+        html.Tbody(
+            [
+                html.Tr(
+                    [
+                        html.Th(),
+                        html.Th('Avg'),
+                        html.Th('Max')
+                    ]
+                ),
+                # speed hr cad pow
+                html.Tr(
+                    [
+                        html.Th('Speed'),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_SPEED, EMPTY_PLACEHOLDER)),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_SPEED, EMPTY_PLACEHOLDER))
+                    ]
+                ),
+                html.Tr(
+                    [
+                        html.Th('Heartrate'),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_HEARTRATE, EMPTY_PLACEHOLDER)),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_HEARTRATE, EMPTY_PLACEHOLDER))
+                    ]
+                ),
+                html.Tr(
+                    [
+                        html.Th('Cadence'),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_CADENCE, EMPTY_PLACEHOLDER)),
+                        html.Td(EMPTY_PLACEHOLDER)
+                    ]
+                ),
+                html.Tr(
+                    [
+                        html.Th('Power'),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_POWER, EMPTY_PLACEHOLDER)),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_POWER, EMPTY_PLACEHOLDER))
+                    ]
+                ),
+            ]
+        ),
+        className='table table-hover table-sm'
+    )
+
 
 
 def get_activity_image(strava_activity):

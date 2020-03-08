@@ -95,7 +95,7 @@ TITLE_MAX_POWER = 'Average weighted power'
 TITLE_AVERAGE_HEARTRATE = 'Average heart rate'
 TITLE_MAX_HEARTRATE = 'Max heart rate'
 TITLE_SUFFER_SCORE = 'Suffer score'
-TITLE_DISTANCE = 'Suffer score'
+TITLE_DISTANCE = 'Distance'
 
 # Placeholders
 EMPTY_PLACEHOLDER = '--'
