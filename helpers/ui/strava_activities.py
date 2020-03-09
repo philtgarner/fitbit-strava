@@ -161,80 +161,8 @@ def get_cycling_summary_table(cycling_activity):
             [
                 html.Tr(
                     [
-                        html.Th(TITLE_DISTANCE),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_DISTANCE, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Time (moving)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_MOVING_TIME, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Time (elapsed)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_ELAPSED_TIME, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Speed (average)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_SPEED, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Speed (max)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_SPEED, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Power (average)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_POWER, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
                         html.Th('Power (weighted average)'),
                         html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_WEIGHTED_POWER, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Power (max)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_POWER, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Heartrate (average)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_HEARTRATE, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Heartrate (max)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_HEARTRATE, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Elevation gain'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_ELEVATION_GAIN, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Cadence (average)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_CADENCE, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Calories'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_CALORIES, EMPTY_PLACEHOLDER))
                     ]
                 ),
                 html.Tr(
@@ -321,6 +249,20 @@ def get_cycling_mini_table(cycling_activity):
                         html.Th('Power'),
                         html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_POWER, EMPTY_PLACEHOLDER)),
                         html.Td(cycling_activity.get(STRAVA_API_KEY_MAX_POWER, EMPTY_PLACEHOLDER))
+                    ]
+                ),
+                html.Tr(
+                    [
+                        html.Th('Calories'),
+                        html.Td(cycling_activity.get(STRAVA_API_KEY_CALORIES, EMPTY_PLACEHOLDER)),
+                        html.Td()
+                    ]
+                ),
+                html.Tr(
+                    [
+                        html.Th('Elapsed time'),
+                        html.Td(str(timedelta(seconds=cycling_activity[STRAVA_API_KEY_ELAPSED_TIME]))),
+                        html.Td()
                     ]
                 ),
             ]
