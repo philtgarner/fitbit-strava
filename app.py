@@ -409,7 +409,7 @@ def cycling(query):
                     [
                         dbc.Col(
                             [
-                                html.H2(datetime.strptime(cycling_activity[STRAVA_API_KEY_ACTIVITY_START_LOCAL], UTC_DATE_FORMAT).strftime(DISPLAY_DATE_FORMAT)),
+                                html.H4(datetime.strptime(cycling_activity[STRAVA_API_KEY_ACTIVITY_START_LOCAL], UTC_DATE_FORMAT).strftime(DISPLAY_DATE_FORMAT)),
                                 html.P(cycling_activity[STRAVA_API_KEY_ACTIVITY_DESCRIPTION]),
                             ]
                         ),
