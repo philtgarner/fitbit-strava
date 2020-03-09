@@ -96,6 +96,7 @@ TITLE_AVERAGE_HEARTRATE = 'Average heart rate'
 TITLE_MAX_HEARTRATE = 'Max heart rate'
 TITLE_SUFFER_SCORE = 'Suffer score'
 TITLE_DISTANCE = 'Distance'
+TITLE_PAGE = 'Phil Garner fitness dashboard'
 
 # Placeholders
 EMPTY_PLACEHOLDER = '--'

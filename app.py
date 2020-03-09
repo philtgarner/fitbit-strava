@@ -22,6 +22,7 @@ from helpers.constants import *
 
 # See here for themes
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
+app.title = TITLE_PAGE
 app.config.suppress_callback_exceptions = True
 
 app.server.config["SESSION_PERMANENT"] = False
@@ -41,8 +42,8 @@ navbar = dbc.NavbarSimple(
             ],
         ),
     ],
-    brand='Phil Garner fitness dashboard',
-    brand_href='#',
+    brand=TITLE_PAGE,
+    brand_href=URL_DASHBOARD,
     sticky='top',
 )
 
