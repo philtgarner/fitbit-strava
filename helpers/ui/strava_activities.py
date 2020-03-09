@@ -155,27 +155,6 @@ def get_cycling_activity_graph(cycling_activity_stream):
         }
     )
 
-def get_cycling_summary_table(cycling_activity):
-    return html.Table(
-        html.Tbody(
-            [
-                html.Tr(
-                    [
-                        html.Th('Power (weighted average)'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_AVERAGE_WEIGHTED_POWER, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-                html.Tr(
-                    [
-                        html.Th('Suffer score'),
-                        html.Td(cycling_activity.get(STRAVA_API_KEY_SUFFER_SCORE, EMPTY_PLACEHOLDER))
-                    ]
-                ),
-            ]
-        ),
-        className='table table-hover'
-    )
-
 
 def get_cycling_route_table(cycling_activity):
     return html.Table(

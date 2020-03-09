@@ -435,17 +435,6 @@ def cycling(query):
                                     [
                                         dbc.Col(
                                             [
-                                                html.H3("Summary"),
-                                                ui_strava.get_cycling_summary_table(cycling_activity)
-                                            ],
-                                        )
-                                    ]
-                                ),
-                                dbc.Row(
-                                    [
-                                        dbc.Col(
-                                            [
-                                                html.H3("Power vs HR"),
                                                 ui_strava.get_cycling_activity_graph(cycling_activity_stream)
                                             ],
                                             md=12,
