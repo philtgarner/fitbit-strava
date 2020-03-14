@@ -73,3 +73,31 @@ def get_cycling_average_power_table(power_averages, body_composition):
         className='table table-hover'
     )
 
+def get_cycling_power_summary_table(power_summary):
+    return html.Table(
+        [
+            html.Tbody(
+                [
+                    html.Tr(
+                        [
+                            html.Th('Normalised power'),
+                            html.Td(round(power_summary['normalised_power'], 1)),
+                        ]
+                    ),
+                    html.Tr(
+                        [
+                            html.Th('Intensity factor'),
+                            html.Td(round(power_summary['intensity_factor'], 2)),
+                        ]
+                    ),
+                    html.Tr(
+                        [
+                            html.Th('TSS'),
+                            html.Td(round(power_summary['tss'], 1)),
+                        ]
+                    )
+                ]
+            )
+        ],
+        className='table table-hover'
+    )

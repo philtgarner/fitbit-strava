@@ -20,6 +20,52 @@ def get_strava_activity(access_token: str, activity_id: str):
     return requests.get(endpoint, headers=headers).json()
 
 
+def get_strava_athlete(access_token: str):
+    endpoint = 'https://www.strava.com/api/v3/athlete'
+    headers = {'Authorization': f'Bearer {access_token}'}
+    return requests.get(endpoint, headers=headers).json()
+
+
+def get_cycling_power_summary(cycling_activity_stream, ftp):
+    # See this article for the maths:
+    # https://medium.com/critical-powers/formulas-from-training-and-racing-with-a-power-meter-2a295c661b46
+
+    time = list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))
+    power = list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))
+    hr = list(filter(lambda f: f['type'] == 'heartrate', cycling_activity_stream))
+    empty = [None] * len(time[0]['data'])
+
+    data = {
+        'time': time[0]['data'] if len(time) > 0 else empty,
+        'power': power[0]['data'] if len(power) > 0 else empty,
+        'hr': hr[0]['data'] if len(hr) > 0 else empty
+    }
+
+    headers = ['time', 'power', 'hr']
+
+    df = pd.DataFrame(data, columns=headers)
+
+    # Get the time for each row in the dataframe
+    # TODO Assume 1 second for now
+    time_interval = 1
+
+    thirty_second_row_count = int(30 / time_interval)
+
+    df['thirty'] = df.power.rolling(window=thirty_second_row_count).mean()
+    df['pow4'] = df['thirty']**4
+
+    max_pow = df['pow4'].mean()
+    normalised_power = max_pow**0.25
+    intensity_factor = normalised_power / ftp
+    duration_seconds = df['time'].max()
+    tss = (duration_seconds * normalised_power * intensity_factor) / (ftp * 36)
+
+    return {
+        'normalised_power': normalised_power,
+        'intensity_factor': intensity_factor,
+        'tss': tss,
+    }
+
 def get_cycling_activity_power_stats(cycling_activity_stream):
     time = list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))
     power = list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))

@@ -3,9 +3,11 @@ import dash_core_components as dcc
 import dash_html_components as html
 import yaml
 import dash_bootstrap_components as dbc
+import json
 from flask_session import Session
 from flask import Flask, session
 from datetime import datetime, timedelta
+from dash.dependencies import Input, Output, State
 
 import helpers.api.strava as api_strava
 import helpers.api.fitbit as api_fitbit
@@ -129,7 +131,7 @@ def get_fitbit_login_url():
 def get_strava_login_url():
     config = yaml.safe_load(open("config.yml"))
     client_id = config['strava']['client_id']
-    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=auto&scope=read,read_all,activity:read,activity:read_all'
+    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=auto&scope=read,read_all,activity:read,activity:read_all,profile:read_all'
 
 
 def fitbit_auth(query):
@@ -390,10 +392,14 @@ def cycling(query):
         cycling_activity = api_strava.get_strava_activity(strava_access_token, activity_id)
         cycling_activity_stream = api_strava.get_strava_activity_stream(strava_access_token, activity_id)
         power_averages = api_strava.get_cycling_activity_power_stats(cycling_activity_stream)
+        athlete = api_strava.get_strava_athlete(strava_access_token)
 
         body_composition = api_fitbit.get_weight(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT))
         day_heartrate = api_fitbit.get_heart_rate_detailed(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT), '1sec')
         sleep = api_fitbit.get_sleep_history(fitbit_access_token, datetime.strptime(cycling_activity['start_date_local'], UTC_DATE_FORMAT) + timedelta(days=1), 1)
+
+        # Store the activity stream so we can access it in callbacks
+        session[f'{SESSION_STRAVA_ACTIVITY_STREAMS_KEY}-{activity_id}'] = json.dumps(cycling_activity_stream)
 
         return dbc.Container(
             [
@@ -474,6 +480,27 @@ def cycling(query):
                                     [
                                         dbc.Col(
                                             [
+                                                dcc.Input(id='ftp', type='number', placeholder='FTP', value=athlete.get('ftp', '0'))
+                                            ],
+                                            md=12,
+                                        )
+                                    ]
+                                ),
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            [
+                                                html.H3("Power summary"),
+                                                html.Div(id='power-zones')
+                                            ],
+                                            md=12,
+                                        )
+                                    ]
+                                ),
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            [
                                                 html.H3("Maximum power"),
                                                 ui_power.get_cycling_average_power_table(power_averages, body_composition)
                                             ],
@@ -533,6 +560,17 @@ def cycling(query):
             html.H3('Auth'),
             html.P('An error occurred')
         ])
+
+
+@app.callback(Output('power-zones', 'children'), [Input('ftp', "value")], [State('url', 'search')])
+def number_render(ftp, query):
+    activity_id = common.get_parameter(query, 'activity')[0]
+
+    activity_stream = json.loads(session.get(f'{SESSION_STRAVA_ACTIVITY_STREAMS_KEY}-{activity_id}'))
+
+    power_summary = api_strava.get_cycling_power_summary(activity_stream, int(ftp))
+
+    return ui_power.get_cycling_power_summary_table(power_summary)
 
 
 @app.callback(dash.dependencies.Output('page-content', 'children'),
