@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import numpy as np
 
 
 def get_strava_activities(access_token: str):
@@ -97,3 +98,23 @@ def get_cycling_activity_power_stats(cycling_activity_stream):
         'one_second': df.power.rolling(window=one_second_row_count).mean().max(),
     }
 
+
+def get_cycling_power_splits(cycling_activity_stream, levels=4):
+    df = get_cycling_data_frame(cycling_activity_stream)
+    output = list()
+
+    split_count = 1
+    for level in range(levels):
+        splits = get_cycling_power_split(df, split_count)
+        output.append({
+            'split_count': split_count,
+            'splits': splits
+        })
+        split_count = split_count * 2
+    return output
+
+
+def get_cycling_power_split(df, split_count):
+    splits = np.array_split(df, split_count)
+
+    return list(map(lambda d: d['power'].mean(), splits))
