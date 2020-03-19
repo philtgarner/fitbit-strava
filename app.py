@@ -480,6 +480,8 @@ def cycling(query):
                                     [
                                         dbc.Col(
                                             [
+                                                html.H3('FTP'),
+                                                html.P('Set your FTP here to ensure that the summary values are accurate. This value has been taken from Strava.'),
                                                 dcc.Input(id='ftp', type='number', placeholder='FTP', value=athlete.get('ftp', '0'))
                                             ],
                                             md=12,
