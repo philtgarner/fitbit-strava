@@ -26,10 +26,7 @@ def get_strava_athlete(access_token: str):
     return requests.get(endpoint, headers=headers).json()
 
 
-def get_cycling_power_summary(cycling_activity_stream, ftp):
-    # See this article for the maths:
-    # https://medium.com/critical-powers/formulas-from-training-and-racing-with-a-power-meter-2a295c661b46
-
+def get_cycling_data_frame(cycling_activity_stream):
     time = list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))
     power = list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))
     hr = list(filter(lambda f: f['type'] == 'heartrate', cycling_activity_stream))
@@ -44,6 +41,15 @@ def get_cycling_power_summary(cycling_activity_stream, ftp):
     headers = ['time', 'power', 'hr']
 
     df = pd.DataFrame(data, columns=headers)
+
+    return df
+
+
+def get_cycling_power_summary(cycling_activity_stream, ftp):
+    # See this article for the maths:
+    # https://medium.com/critical-powers/formulas-from-training-and-racing-with-a-power-meter-2a295c661b46
+
+    df = get_cycling_data_frame(cycling_activity_stream)
 
     # Get the time for each row in the dataframe
     # TODO Assume 1 second for now
@@ -67,20 +73,7 @@ def get_cycling_power_summary(cycling_activity_stream, ftp):
     }
 
 def get_cycling_activity_power_stats(cycling_activity_stream):
-    time = list(filter(lambda f: f['type'] == 'time', cycling_activity_stream))
-    power = list(filter(lambda f: f['type'] == 'watts', cycling_activity_stream))
-    hr = list(filter(lambda f: f['type'] == 'heartrate', cycling_activity_stream))
-    empty = [None] * len(time[0]['data'])
-
-    data = {
-        'time': list(map(lambda t: t / 60, time[0]['data'])),
-        'power': power[0]['data'] if len(power) > 0 else empty,
-        'hr': hr[0]['data'] if len(hr) > 0 else empty
-    }
-
-    headers = ['time', 'power', 'hr']
-
-    df = pd.DataFrame(data, columns=headers)
+    df = get_cycling_data_frame(cycling_activity_stream)
 
     # Get the time for each row in the dataframe
     # TODO Assume 1 second for now
