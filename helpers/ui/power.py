@@ -73,3 +73,82 @@ def get_cycling_average_power_table(power_averages, body_composition):
         className='table table-hover'
     )
 
+
+def get_cycling_power_summary_table(power_summary):
+    return html.Table(
+        [
+            html.Tbody(
+                [
+                    html.Tr(
+                        [
+                            html.Th('Normalised power'),
+                            html.Td(round(power_summary['normalised_power'], 1)),
+                        ]
+                    ),
+                    html.Tr(
+                        [
+                            html.Th('Intensity factor'),
+                            html.Td(round(power_summary['intensity_factor'], 2)),
+                        ]
+                    ),
+                    html.Tr(
+                        [
+                            html.Th('TSS'),
+                            html.Td(round(power_summary['tss'], 1)),
+                        ]
+                    )
+                ]
+            )
+        ],
+        className='table table-hover'
+    )
+
+
+def get_cycling_power_splits_table(power_splits):
+
+    # Get the maximum number of splits
+    # This is used to work out how many columns each cell has to span
+    max_split_count = max(map(lambda s: len(s['splits']), power_splits))
+
+    rows = list()
+
+    # Loop over all the sets of splits
+    for splits in power_splits:
+        cells = list()
+
+        # Get the number of splits in this set of splits
+        split_count = len(splits['splits'])
+
+        # Keep track of the previous power for colour coding. The first one will always have no colour
+        previous_power = None
+        for split in splits['splits']:
+
+            # Round the power to the nearest Watt
+            current_power = round(split)
+
+            # Work out what colour the cell should be
+            class_name = 'text-center'
+            if previous_power is not None:
+                if current_power > previous_power:
+                    class_name = 'text-center table-success'
+                elif current_power < previous_power:
+                    class_name = 'text-center table-danger'
+
+            # Append the new cell to the list of cells in this row
+            cells.append(html.Td(current_power, colSpan=max_split_count/split_count, className=class_name))
+            previous_power = current_power
+
+        # Append this row to the list of rows
+        rows.append(html.Tr(cells))
+
+    # Return the table containing all the rows we have just put together
+    return html.Table(
+        [
+            html.Tbody(
+                [
+                    *rows
+                ]
+            )
+        ],
+        className='table table-hover'
+    )

@@ -5,6 +5,7 @@ SESSION_FITBIT_EXPIRES_KEY = 'fitbit_expires'
 SESSION_STRAVA_ACCESS_TOKEN_KEY = 'strava_access_token'
 SESSION_STRAVA_REFRESH_TOKEN_KEY = 'strava_refresh_token'
 SESSION_STRAVA_EXPIRES_KEY = 'strava_expires'
+SESSION_STRAVA_ACTIVITY_STREAMS_KEY = 'activitity-streams'
 
 # URL endpoints
 URL_CYCLING = '/cycling'
@@ -14,7 +15,7 @@ URL_FITBIT_AUTH = '/fitbitauth'
 URL_BASE = '/'
 
 # Date formats
-DISPLAY_DATE_FORMAT = '%b %d %Y %H:%M'
+DISPLAY_DATE_FORMAT = '%A %d %B %Y %H:%M'
 UTC_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 FITBIT_SLEEP_TIME = '%Y-%m-%dT%H:%M:%S.000'
 GANTT_CHART_TIME = '%Y-%m-%d %H:%M:%S'
@@ -95,7 +96,8 @@ TITLE_MAX_POWER = 'Average weighted power'
 TITLE_AVERAGE_HEARTRATE = 'Average heart rate'
 TITLE_MAX_HEARTRATE = 'Max heart rate'
 TITLE_SUFFER_SCORE = 'Suffer score'
-TITLE_DISTANCE = 'Suffer score'
+TITLE_DISTANCE = 'Distance'
+TITLE_PAGE = 'Phil Garner fitness dashboard'
 
 # Placeholders
 EMPTY_PLACEHOLDER = '--'
