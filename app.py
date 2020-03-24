@@ -580,10 +580,9 @@ def cycling(query):
 def number_render(ftp, query):
     activity_id = common.get_parameter(query, 'activity')[0]
 
+    # Get the activity stream that we serialised in the session
     activity_stream = json.loads(session.get(f'{SESSION_STRAVA_ACTIVITY_STREAMS_KEY}-{activity_id}'))
-
     power_summary = api_strava.get_cycling_power_summary(activity_stream, int(ftp))
-
     return ui_power.get_cycling_power_summary_table(power_summary)
 
 
