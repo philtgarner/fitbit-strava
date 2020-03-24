@@ -117,4 +117,4 @@ def get_cycling_power_splits(cycling_activity_stream, levels=4):
 def get_cycling_power_split(df, split_count):
     splits = np.array_split(df, split_count)
 
-    return list(map(lambda d: d['power'].mean(), splits))
+    return list(map(lambda d: d['power'].mean() if not np.isnan(d['power'].mean()) else None, splits))
