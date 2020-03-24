@@ -73,6 +73,7 @@ def get_cycling_average_power_table(power_averages, body_composition):
         className='table table-hover'
     )
 
+
 def get_cycling_power_summary_table(power_summary):
     return html.Table(
         [
@@ -96,6 +97,39 @@ def get_cycling_power_summary_table(power_summary):
                             html.Td(round(power_summary['tss'], 1)),
                         ]
                     )
+                ]
+            )
+        ],
+        className='table table-hover'
+    )
+
+
+def get_cycling_power_splits_table(power_splits):
+
+    max_split_count = max(map(lambda s: len(s['splits']), power_splits))
+
+    rows = list()
+    for splits in power_splits:
+        cells = list()
+        split_count = len(splits['splits'])
+        previous_power = None
+        for split in splits['splits']:
+            current_power = round(split)
+            class_name = 'text-center'
+            if previous_power is not None:
+                if current_power > previous_power:
+                    class_name = 'text-center table-success'
+                elif current_power < previous_power:
+                    class_name = 'text-center table-danger'
+            cells.append(html.Td(current_power, colSpan=max_split_count/split_count, className=class_name))
+            previous_power = current_power
+        rows.append(html.Tr(cells))
+
+    return html.Table(
+        [
+            html.Tbody(
+                [
+                    *rows
                 ]
             )
         ],
