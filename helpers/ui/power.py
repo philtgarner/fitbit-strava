@@ -123,20 +123,23 @@ def get_cycling_power_splits_table(power_splits):
         previous_power = None
         for split in splits['splits']:
 
-            # Round the power to the nearest Watt
-            current_power = round(split)
-
-            # Work out what colour the cell should be
             class_name = 'text-center'
-            if previous_power is not None:
-                if current_power > previous_power:
-                    class_name = 'text-center table-success'
-                elif current_power < previous_power:
-                    class_name = 'text-center table-danger'
 
-            # Append the new cell to the list of cells in this row
-            cells.append(html.Td(current_power, colSpan=max_split_count/split_count, className=class_name))
-            previous_power = current_power
+            # If we don't have a split then just show the empty placeholder
+            if split is None:
+                cells.append(html.Td(EMPTY_PLACEHOLDER, colSpan=max_split_count / split_count, className=class_name))
+            else:
+                # Round the power to the nearest Watt
+                current_power = round(split)
+                if previous_power is not None:
+                    if current_power > previous_power:
+                        class_name = 'text-center table-success'
+                    elif current_power < previous_power:
+                        class_name = 'text-center table-danger'
+
+                # Append the new cell to the list of cells in this row
+                cells.append(html.Td(current_power, colSpan=max_split_count/split_count, className=class_name))
+                previous_power = current_power
 
         # Append this row to the list of rows
         rows.append(html.Tr(cells))
