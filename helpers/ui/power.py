@@ -155,3 +155,40 @@ def get_cycling_power_splits_table(power_splits):
         ],
         className='table table-hover'
     )
+
+
+def get_cycling_power_gradient_table(gradient_splits):
+
+    rows = list()
+    for index, row in gradient_splits.iterrows():
+        rows.append(
+            html.Tr(
+                [
+                    html.Td(str(index)),
+                    html.Td(str(row['duration'].to_pytimedelta())),
+                    html.Td(round(row['power_mean'], 0) if isinstance(row['power_mean'], (int, float)) else EMPTY_PLACEHOLDER),
+                    html.Td(round(row['power_max'], 0) if isinstance(row['power_max'], (int, float)) else EMPTY_PLACEHOLDER)
+                ]
+            )
+        )
+
+    return html.Table(
+        [
+            html.Thead(
+                [
+                    html.Th('Gradient'),
+                    html.Th('Duration'),
+                    html.Th(TITLE_AVERAGE_POWER),
+                    html.Th(TITLE_MAX_POWER)
+                ]
+            ),
+            html.Tbody(
+                [
+                    *rows
+                ]
+            )
+        ],
+        className='table table-hover'
+    )
+
+
