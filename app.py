@@ -534,7 +534,7 @@ def cycling(query):
                                                 html.H3("Recovery heartrate"),
                                                 ui_heartrate.get_heartrate_recovery(cycling_activity_stream,
                                                                                     day_heartrate, datetime.strptime(
-                                                        cycling_activity[STRAVA_API_KEY_ACTIVITY_START],
+                                                        cycling_activity[STRAVA_API_KEY_ACTIVITY_START_LOCAL],
                                                         UTC_DATE_FORMAT))
                                             ],
                                             md=12,
