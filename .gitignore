@@ -137,3 +137,6 @@ config.prod.yml
 
 # Flask session files
 flask_session
+
+# Docker compose file
+docker-compose.yml
