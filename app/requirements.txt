@@ -1,0 +1,11 @@
+numpy
+pandas
+requests
+dash
+dash-core-components
+dash-html-components
+pyyaml
+dash-bootstrap-components
+flask-session
+flask
+redis
