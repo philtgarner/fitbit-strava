@@ -49,8 +49,7 @@ navbar = dbc.NavbarSimple(
             in_navbar=True,
             label='Menu',
             children=[
-                dbc.DropdownMenuItem(dbc.NavLink('Strava sign in', href='/strava')),
-                dbc.DropdownMenuItem(dbc.NavLink('Fitbit sign in', href='/fitbit')),
+                dbc.DropdownMenuItem(dbc.NavLink('Log out', href=URL_LOGOUT)),
             ],
         ),
     ],
@@ -70,48 +69,32 @@ app.layout = html.Div([
 def login():
 
     buttons = [
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        dbc.Button(
-                            'Fitbit log in',
-                            href=get_fitbit_login_url(),
-                            color='dark',
-                            style={'backgroundColor': COLOUR_FITBIT_BLUE},
-                            block=True,
-                            className='mr-1'
-                        )
-                    ],
-                    md=6,
-                ),
-                dbc.Col(
-                    [
-                        dbc.Button(
-                            'Strava log in',
-                            href=get_strava_login_url(),
-                            color='dark',
-                            style={'backgroundColor': COLOUR_STRAVA_ORANGE},
-                            block=True,
-                            className='mr-1'
-                        )
-                    ],
-                    md=6,
-                )
-            ]
+        dbc.Button(
+            'Fitbit log in',
+            href=get_fitbit_login_url(),
+            color='dark',
+            style={'backgroundColor': COLOUR_FITBIT_BLUE},
+            block=True,
+            className='mr-1'
+        ),
+        dbc.Button(
+            'Strava log in',
+            href=get_strava_login_url(),
+            color='dark',
+            style={'backgroundColor': COLOUR_STRAVA_ORANGE},
+            block=True,
+            className='mr-1'
         )
     ]
 
     if auth_fitbit.ensure_valid_access_token() and auth_strava.ensure_valid_access_token():
         buttons.append(
-            dbc.Row(
-                [
-                    dbc.Col(
-                        [
-                            dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1', block=True),
-                        ]
-                    )
-                ]
+            dbc.Button(
+                'Dashboard',
+                href=URL_DASHBOARD,
+                color='primary',
+                className='mr-1',
+                block=True
             )
         )
 
@@ -121,15 +104,33 @@ def login():
                 [
                     dbc.Col(
                         [
-                            html.H3("Fitness dashboard")
-                        ],
-                        md=12,
+                            html.H2("This probably won't work for you"),
+                            html.P(
+                                "This is an app that combines Fitbit data and Strava. It uses a special level of API access with Fitbit that means, unless you own this application, it won't work for you."),
+                            html.A('Fitbit personal apps',
+                                   href='https://dev.fitbit.com/build/reference/web-api/basics/'),
+                            html.H2('GitHub'),
+                            html.A('GitHub repo', href='https://github.com/philtgarner/fitbit-strava/')
+                        ]
+                    ),
+                    dbc.Col(
+                        [
+                            *buttons
+                        ]
                     )
                 ]
             ),
-            *buttons
         ]
     )
+
+
+def logout():
+    session.pop(SESSION_FITBIT_ACCESS_TOKEN_KEY, None)
+    session.pop(SESSION_FITBIT_REFRESH_TOKEN_KEY, None)
+    session.pop(SESSION_FITBIT_EXPIRES_KEY, None)
+    session.pop(SESSION_STRAVA_REFRESH_TOKEN_KEY, None)
+    session.pop(SESSION_STRAVA_EXPIRES_KEY, None)
+    session.pop(SESSION_STRAVA_ACCESS_TOKEN_KEY, None)
 
 
 def get_fitbit_login_url():
@@ -622,6 +623,9 @@ def display_page(pathname, search):
         return dashboard()
     elif pathname == URL_CYCLING:
         return cycling(search)
+    elif pathname == URL_LOGOUT:
+        logout()
+        return login()
     else:
         return html.H1('404')
 

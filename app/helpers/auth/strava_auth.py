@@ -11,39 +11,35 @@ import helpers.common as common
 
 
 def parse_query_for_access_token(query):
-    if session.get(SESSION_STRAVA_ACCESS_TOKEN_KEY, None) is None:
-        config = yaml.safe_load(open("config.yml"))
-        client_id = config['strava']['client_id']
-        client_secret = config['strava']['client_secret']
+    config = yaml.safe_load(open("config.yml"))
+    client_id = config['strava']['client_id']
+    client_secret = config['strava']['client_secret']
 
-        # Get the code from the permission request response
-        code = common.get_parameter(query, 'code')
+    # Get the code from the permission request response
+    code = common.get_parameter(query, 'code')
 
-        # Get an authorisation token
-        endpoint = "https://www.strava.com/api/v3/oauth/token"
-        data = {'client_id': client_id, 'client_secret': client_secret, 'grant_type': 'authorization_code',
-                'code': code}
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    # Get an authorisation token
+    endpoint = "https://www.strava.com/api/v3/oauth/token"
+    data = {'client_id': client_id, 'client_secret': client_secret, 'grant_type': 'authorization_code',
+            'code': code}
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
-        # Store the time we made the request so we know how long the access token will last for
-        request_date = datetime.now()
+    # Store the time we made the request so we know how long the access token will last for
+    request_date = datetime.now()
 
-        output = json.loads(requests.post(endpoint, data=data, headers=headers).text)
+    output = json.loads(requests.post(endpoint, data=data, headers=headers).text)
 
-        if 'access_token' in output:
-            session[SESSION_STRAVA_ACCESS_TOKEN_KEY] = output['access_token']
-            session[SESSION_STRAVA_REFRESH_TOKEN_KEY] = output['refresh_token']
-            session[SESSION_STRAVA_EXPIRES_KEY] = request_date + timedelta(seconds=output['expires_in'])
+    if 'access_token' in output:
+        session[SESSION_STRAVA_ACCESS_TOKEN_KEY] = output['access_token']
+        session[SESSION_STRAVA_REFRESH_TOKEN_KEY] = output['refresh_token']
+        session[SESSION_STRAVA_EXPIRES_KEY] = request_date + timedelta(seconds=output['expires_in'])
 
-            # Access token saved to session for subsequent calls - success
-            return True
+        # Access token saved to session for subsequent calls - success
+        return True
 
-        # We failed to get an access token for some reason
-        # TODO Add some proper error handling here
-        return False
-
-    # If we already have an access token then there's no need to look again for one
-    return True
+    # We failed to get an access token for some reason
+    # TODO Add some proper error handling here
+    return False
 
 
 def refresh_access_token():
