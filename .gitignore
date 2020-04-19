@@ -130,6 +130,7 @@ dmypy.json
 
 # Config files with authentication details
 config.yml
+config.prod.yml
 
 # PyCharm directory
 .idea/

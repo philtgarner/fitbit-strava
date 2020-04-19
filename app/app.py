@@ -4,6 +4,8 @@ import dash_html_components as html
 import yaml
 import dash_bootstrap_components as dbc
 import json
+import redis
+import urllib.parse
 from flask_session import Session
 from flask import Flask, session
 from datetime import datetime, timedelta
@@ -27,8 +29,16 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 app.title = TITLE_PAGE
 app.config.suppress_callback_exceptions = True
 
-app.server.config["SESSION_PERMANENT"] = False
-app.server.config["SESSION_TYPE"] = "filesystem"
+config = yaml.safe_load(open('config.yml'))
+session_type = config['session']['type']
+
+if session_type == 'redis':
+    app.server.config["SESSION_PERMANENT"] = False
+    app.server.config["SESSION_TYPE"] = session_type
+    app.server.config["SESSION_REDIS"] = redis.Redis(host=config['session']['redis_host'], port=config['session']['redis_port'], db=0)
+else:
+    app.server.config["SESSION_TYPE"] = 'filesystem'
+
 Session(app.server)
 
 navbar = dbc.NavbarSimple(
@@ -123,15 +133,16 @@ def login():
 
 
 def get_fitbit_login_url():
-    config = yaml.safe_load(open("config.yml"))
     client_id = config['fitbit']['client_id']
-    return f'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Ffitbitauth&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
+    callback_url = urllib.parse.quote_plus(config['fitbit']['callback_url'])
+    url = f'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={callback_url}&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
+    return url
 
 
 def get_strava_login_url():
-    config = yaml.safe_load(open("config.yml"))
     client_id = config['strava']['client_id']
-    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=auto&scope=read,read_all,activity:read,activity:read_all,profile:read_all'
+    callback_url = config['strava']['callback_url']
+    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri={callback_url}&approval_prompt=auto&scope=read,read_all,activity:read,activity:read_all,profile:read_all'
 
 
 def fitbit_auth(query):
@@ -616,4 +627,12 @@ def display_page(pathname, search):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=5000)
+    host = '127.0.0.1'
+    debug = True
+    port = 5000
+    if 'server' in config:
+        host = config['server']['host'] if 'host' in config['server'] else host
+        debug = config['server']['debug'] if 'debug' in config['server'] else debug
+        port = config['server']['port'] if 'port' in config['server'] else port
+
+    app.run_server(host=host, debug=debug, port=port)

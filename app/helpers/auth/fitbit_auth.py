@@ -3,6 +3,7 @@ import yaml
 import json
 import base64
 import requests
+import redis
 from datetime import datetime, timedelta
 
 from helpers.constants import *
@@ -14,6 +15,7 @@ def parse_query_for_access_token(query):
         config = yaml.safe_load(open("config.yml"))
         client_id = config['fitbit']['client_id']
         client_secret = config['fitbit']['client_secret']
+        callback_url = config['fitbit']['callback_url']
 
         # Encode the client ID and secret for authentication when requesting a token
         auth = str(base64.b64encode(bytes(f'{client_id}:{client_secret}', 'utf-8')), "utf-8")
@@ -24,7 +26,7 @@ def parse_query_for_access_token(query):
         # Get an authorisation token
         endpoint = "https://api.fitbit.com/oauth2/token"
         data = {'clientId': client_id, 'grant_type': 'authorization_code',
-                'redirect_uri': 'http://127.0.0.1:5000/fitbitauth',
+                'redirect_uri': callback_url,
                 'code': code}
         headers = {"Authorization": f"Basic {auth}",
                    'Content-Type': 'application/x-www-form-urlencoded'}
@@ -44,8 +46,6 @@ def parse_query_for_access_token(query):
             session[SESSION_FITBIT_ACCESS_TOKEN_KEY] = output['access_token']
             session[SESSION_FITBIT_REFRESH_TOKEN_KEY] = output['refresh_token']
             session[SESSION_FITBIT_EXPIRES_KEY] = request_date + timedelta(seconds=output['expires_in'])
-
-            refresh_access_token()
 
             # Access token saved to session for subsequent calls - success
             return True
