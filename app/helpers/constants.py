@@ -12,6 +12,7 @@ URL_CYCLING = '/cycling'
 URL_DASHBOARD = '/dashboard'
 URL_STRAVA_AUTH = '/stravaauth'
 URL_FITBIT_AUTH = '/fitbitauth'
+URL_LOGOUT = '/logout'
 URL_BASE = '/'
 
 # Date formats

@@ -3,6 +3,7 @@ import dash_core_components as dcc
 import helpers.constants as constants
 from helpers.constants import *
 
+
 def get_detailed_heart_rate_graph(heart_rate_details):
     start_date = heart_rate_details[FITBIT_API_KEY_HR_ACTIVITY][0][FITBIT_API_KEY_DATETIME]
     dates = list(map(lambda x: datetime.strptime(f'{start_date}T{x[FITBIT_API_KEY_INTRADAY_TIME]}Z', UTC_DATE_FORMAT), heart_rate_details[FITBIT_API_KEY_HR_INTRADAY][FITBIT_API_KEY_INTRADAY_DATASET]))

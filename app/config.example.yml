@@ -1,0 +1,16 @@
+fitbit:
+  client_id: CLIENTID
+  client_secret: CLIENTSECRET
+    callback_url: https://YOURSITE/fitbitauth
+strava:
+  client_id: CLIENTID
+  client_secret: CLIENTSECRET
+    callback_url: https://YOURSITE/stravaauth
+session:
+  type: redis
+  redis_host: REDISHOST
+  redis_port: 6379
+server:
+  host: 127.0.0.1
+  debug: True
+  port: 5000

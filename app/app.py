@@ -4,6 +4,8 @@ import dash_html_components as html
 import yaml
 import dash_bootstrap_components as dbc
 import json
+import redis
+import urllib.parse
 from flask_session import Session
 from flask import Flask, session
 from datetime import datetime, timedelta
@@ -22,13 +24,22 @@ import helpers.auth.fitbit_auth as auth_fitbit
 from helpers.constants import *
 
 
-# See here for themes
+# See here for themes: https://bootswatch.com/cosmo/
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 app.title = TITLE_PAGE
 app.config.suppress_callback_exceptions = True
 
-app.server.config["SESSION_PERMANENT"] = False
-app.server.config["SESSION_TYPE"] = "filesystem"
+config = yaml.safe_load(open('config.yml'))
+session_type = config['session']['type']
+
+if session_type == 'redis':
+    app.server.config['SESSION_PERMANENT'] = True
+    app.server.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+    app.server.config['SESSION_TYPE'] = session_type
+    app.server.config['SESSION_REDIS'] = redis.Redis(host=config['session']['redis_host'], port=config['session']['redis_port'], db=0)
+else:
+    app.server.config['SESSION_TYPE'] = 'filesystem'
+
 Session(app.server)
 
 navbar = dbc.NavbarSimple(
@@ -39,14 +50,14 @@ navbar = dbc.NavbarSimple(
             in_navbar=True,
             label='Menu',
             children=[
-                dbc.DropdownMenuItem(dbc.NavLink('Strava sign in', href='/strava')),
-                dbc.DropdownMenuItem(dbc.NavLink('Fitbit sign in', href='/fitbit')),
+                dbc.DropdownMenuItem(dbc.NavLink('Log out', href=URL_LOGOUT)),
             ],
         ),
     ],
     brand=TITLE_PAGE,
     brand_href=URL_DASHBOARD,
     sticky='top',
+    fluid=True,
 )
 
 app.layout = html.Div([
@@ -60,48 +71,32 @@ app.layout = html.Div([
 def login():
 
     buttons = [
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        dbc.Button(
-                            'Fitbit log in',
-                            href=get_fitbit_login_url(),
-                            color='dark',
-                            style={'backgroundColor': COLOUR_FITBIT_BLUE},
-                            block=True,
-                            className='mr-1'
-                        )
-                    ],
-                    md=6,
-                ),
-                dbc.Col(
-                    [
-                        dbc.Button(
-                            'Strava log in',
-                            href=get_strava_login_url(),
-                            color='dark',
-                            style={'backgroundColor': COLOUR_STRAVA_ORANGE},
-                            block=True,
-                            className='mr-1'
-                        )
-                    ],
-                    md=6,
-                )
-            ]
+        dbc.Button(
+            'Fitbit log in',
+            href=get_fitbit_login_url(),
+            color='dark',
+            style={'backgroundColor': COLOUR_FITBIT_BLUE},
+            block=True,
+            className='mr-1'
+        ),
+        dbc.Button(
+            'Strava log in',
+            href=get_strava_login_url(),
+            color='dark',
+            style={'backgroundColor': COLOUR_STRAVA_ORANGE},
+            block=True,
+            className='mr-1'
         )
     ]
 
     if auth_fitbit.ensure_valid_access_token() and auth_strava.ensure_valid_access_token():
         buttons.append(
-            dbc.Row(
-                [
-                    dbc.Col(
-                        [
-                            dbc.Button('Dashboard', href=URL_DASHBOARD, color='primary', className='mr-1', block=True),
-                        ]
-                    )
-                ]
+            dbc.Button(
+                'Dashboard',
+                href=URL_DASHBOARD,
+                color='primary',
+                className='mr-1',
+                block=True
             )
         )
 
@@ -111,27 +106,46 @@ def login():
                 [
                     dbc.Col(
                         [
-                            html.H3("Fitness dashboard")
-                        ],
-                        md=12,
+                            html.H2("This probably won't work for you"),
+                            html.P(
+                                "This is an app that combines Fitbit data and Strava. It uses a special level of API access with Fitbit that means, unless you own this application, it won't work for you."),
+                            html.A('Fitbit personal apps',
+                                   href='https://dev.fitbit.com/build/reference/web-api/basics/'),
+                            html.H2('GitHub'),
+                            html.A('GitHub repo', href='https://github.com/philtgarner/fitbit-strava/')
+                        ]
+                    ),
+                    dbc.Col(
+                        [
+                            *buttons
+                        ]
                     )
                 ]
             ),
-            *buttons
         ]
     )
 
 
+def logout():
+    session.pop(SESSION_FITBIT_ACCESS_TOKEN_KEY, None)
+    session.pop(SESSION_FITBIT_REFRESH_TOKEN_KEY, None)
+    session.pop(SESSION_FITBIT_EXPIRES_KEY, None)
+    session.pop(SESSION_STRAVA_REFRESH_TOKEN_KEY, None)
+    session.pop(SESSION_STRAVA_EXPIRES_KEY, None)
+    session.pop(SESSION_STRAVA_ACCESS_TOKEN_KEY, None)
+
+
 def get_fitbit_login_url():
-    config = yaml.safe_load(open("config.yml"))
     client_id = config['fitbit']['client_id']
-    return f'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Ffitbitauth&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
+    callback_url = urllib.parse.quote_plus(config['fitbit']['callback_url'])
+    url = f'https://www.fitbit.com/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={callback_url}&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800'
+    return url
 
 
 def get_strava_login_url():
-    config = yaml.safe_load(open("config.yml"))
     client_id = config['strava']['client_id']
-    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri=http://127.0.0.1:5000/stravaauth&approval_prompt=auto&scope=read,read_all,activity:read,activity:read_all,profile:read_all'
+    callback_url = config['strava']['callback_url']
+    return f'http://www.strava.com/oauth/authorize?client_id={client_id}&response_type=code&redirect_uri={callback_url}&approval_prompt=auto&scope=read,read_all,activity:read,activity:read_all,profile:read_all'
 
 
 def fitbit_auth(query):
@@ -372,6 +386,7 @@ def dashboard():
                 )
             ],
             className="mt-4",
+            fluid=True
         )
 
     else:
@@ -579,6 +594,7 @@ def cycling(query):
                 ),
             ],
             className="mt-4",
+            fluid=True
         )
 
     else:
@@ -611,9 +627,20 @@ def display_page(pathname, search):
         return dashboard()
     elif pathname == URL_CYCLING:
         return cycling(search)
+    elif pathname == URL_LOGOUT:
+        logout()
+        return login()
     else:
         return html.H1('404')
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=5000)
+    host = '127.0.0.1'
+    debug = True
+    port = 5000
+    if 'server' in config:
+        host = config['server']['host'] if 'host' in config['server'] else host
+        debug = config['server']['debug'] if 'debug' in config['server'] else debug
+        port = config['server']['port'] if 'port' in config['server'] else port
+
+    app.run_server(host=host, debug=debug, port=port)

@@ -130,9 +130,13 @@ dmypy.json
 
 # Config files with authentication details
 config.yml
+config.prod.yml
 
 # PyCharm directory
 .idea/
 
 # Flask session files
 flask_session
+
+# Docker compose file
+docker-compose.yml

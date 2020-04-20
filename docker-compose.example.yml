@@ -1,0 +1,15 @@
+version: '3.3'
+
+services:
+    fitness-ui:
+        container_name: fitness-ui
+        image: philtgarner/fitness
+        restart: always
+        ports:
+            - 8080:5000
+        depends_on:
+            - fitness-redis
+    fitness-redis:
+        container_name: fitness-redis
+        image: redis
+        restart: always
