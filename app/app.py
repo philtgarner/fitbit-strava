@@ -56,6 +56,7 @@ navbar = dbc.NavbarSimple(
     brand=TITLE_PAGE,
     brand_href=URL_DASHBOARD,
     sticky='top',
+    fluid=True,
 )
 
 app.layout = html.Div([
@@ -384,6 +385,7 @@ def dashboard():
                 )
             ],
             className="mt-4",
+            fluid=True
         )
 
     else:
@@ -591,6 +593,7 @@ def cycling(query):
                 ),
             ],
             className="mt-4",
+            fluid=True
         )
 
     else:
