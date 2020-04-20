@@ -24,7 +24,7 @@ import helpers.auth.fitbit_auth as auth_fitbit
 from helpers.constants import *
 
 
-# See here for themes
+# See here for themes: https://bootswatch.com/cosmo/
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 app.title = TITLE_PAGE
 app.config.suppress_callback_exceptions = True
@@ -33,11 +33,12 @@ config = yaml.safe_load(open('config.yml'))
 session_type = config['session']['type']
 
 if session_type == 'redis':
-    app.server.config["SESSION_PERMANENT"] = False
-    app.server.config["SESSION_TYPE"] = session_type
-    app.server.config["SESSION_REDIS"] = redis.Redis(host=config['session']['redis_host'], port=config['session']['redis_port'], db=0)
+    app.server.config['SESSION_PERMANENT'] = True
+    app.server.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+    app.server.config['SESSION_TYPE'] = session_type
+    app.server.config['SESSION_REDIS'] = redis.Redis(host=config['session']['redis_host'], port=config['session']['redis_port'], db=0)
 else:
-    app.server.config["SESSION_TYPE"] = 'filesystem'
+    app.server.config['SESSION_TYPE'] = 'filesystem'
 
 Session(app.server)
 
