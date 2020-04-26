@@ -64,7 +64,7 @@ app.layout = html.Div([
     # represents the URL bar, doesn't render anything
     dcc.Location(id='url', refresh=False),
     navbar,
-    html.Div(id='page-content')
+    dcc.Loading(id='page-content', type='cube', color=COLOUR_STRAVA_ORANGE, fullscreen=True)
 ])
 
 
