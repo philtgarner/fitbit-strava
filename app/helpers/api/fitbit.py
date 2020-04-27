@@ -1,6 +1,8 @@
 import requests
 from datetime import datetime, timedelta
 import pandas as pd
+import numpy as np
+from helpers.constants import *
 
 
 def get_heart_rate_history(access_token: str, days: int = 30):
@@ -19,7 +21,28 @@ def get_heart_rate_detailed(access_token: str, day: datetime = None, detail: str
     # Get some data
     endpoint = f'https://api.fitbit.com/1/user/-/activities/heart/date/{yesterday}/1d/{detail}.json'
     headers = {"Authorization": f"Bearer {access_token}"}
-    return requests.get(endpoint, headers=headers).json()
+    response = requests.get(endpoint, headers=headers).json()
+    dataset = response[FITBIT_API_KEY_HR_INTRADAY][FITBIT_API_KEY_INTRADAY_DATASET]
+
+    # Create a dataframe from the heartrate data so we can use other pandas features
+    df = pd.DataFrame(
+        {
+            'hr': list(map(lambda w: w[FITBIT_API_KEY_INTRADAY_VALUE], dataset))
+        },
+        index=list(map(lambda x: datetime.strptime(f'{yesterday}T{x[FITBIT_API_KEY_INTRADAY_TIME]}Z', UTC_DATE_FORMAT), dataset))
+    )
+
+    start = datetime.strptime(f'{yesterday}T00:00:00Z', UTC_DATE_FORMAT)
+
+    # If the detail level is 1 second then we will interpolate across 20 sec to allow for intermittent results
+    if detail == '1sec':
+        end = datetime.strptime(f'{yesterday}T23:59:59Z', UTC_DATE_FORMAT)
+        new_index = pd.Index(np.arange(start, end, timedelta(seconds=1)))
+        return df.reindex(new_index).interpolate(limit=20)
+    else:
+        end = datetime.strptime(f'{yesterday}T23:59:00Z', UTC_DATE_FORMAT)
+        new_index = pd.Index(np.arange(start, end, timedelta(minutes=1)))
+        return df.reindex(new_index)
 
 
 def get_sleep_history(access_token: str, end: datetime = None, duration: int = 30):
