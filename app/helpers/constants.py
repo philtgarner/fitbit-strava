@@ -18,7 +18,7 @@ URL_BASE = '/'
 # Date formats
 DISPLAY_DATE_FORMAT = '%A %d %B %Y %H:%M'
 UTC_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
-FITBIT_SLEEP_TIME = '%Y-%m-%dT%H:%M:%S.000'
+FITBIT_LOCAL_TIME = '%Y-%m-%dT%H:%M:%S.%f'
 GANTT_CHART_TIME = '%Y-%m-%d %H:%M:%S'
 DATE_ONLY = '%Y-%m-%d'
 

@@ -207,7 +207,7 @@ def get_detailed_sleep_graph(sleep_data):
 
 
 def sleep_period_to_gantt_element(sleep_period):
-    start_time = datetime.strptime(sleep_period['dateTime'], constants.FITBIT_SLEEP_TIME)
+    start_time = datetime.strptime(sleep_period['dateTime'], constants.FITBIT_LOCAL_TIME)
     end_time = start_time + timedelta(seconds=sleep_period['seconds'])
     current_phase = sleep_period['level']
 
