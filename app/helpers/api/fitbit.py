@@ -130,3 +130,10 @@ def get_weight(access_token: str, weight_day: datetime):
             'fat': None,
             'weight': None
         }
+
+
+def get_device_information(access_token: str):
+    # Get some data
+    endpoint = 'https://api.fitbit.com/1/user/-/devices.json'
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return requests.get(endpoint, headers=headers).json()

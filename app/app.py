@@ -18,6 +18,7 @@ import helpers.ui.body_composition as ui_body_composition
 import helpers.ui.power as ui_power
 import helpers.ui.sleep as ui_sleep
 import helpers.ui.strava_activities as ui_strava
+import helpers.ui.fitbit_devices as ui_devices
 import helpers.common as common
 import helpers.auth.strava_auth as auth_strava
 import helpers.auth.fitbit_auth as auth_fitbit
@@ -282,12 +283,22 @@ def dashboard():
         heart_rate_history = api_fitbit.get_heart_rate_history(fitbit_access_token)
         heart_rate_details = api_fitbit.get_heart_rate_detailed(fitbit_access_token)
         sleep_history = api_fitbit.get_sleep_history(fitbit_access_token)
+        devices = api_fitbit.get_device_information(fitbit_access_token)
 
         # Get Strava data
         activity_history = api_strava.get_strava_activities(strava_access_token)
 
         return dbc.Container(
             [
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                ui_devices.get_device_table(devices)
+                            ]
+                        )
+                    ]
+                ),
                 dbc.Row(
                     [
                         dbc.Col(
